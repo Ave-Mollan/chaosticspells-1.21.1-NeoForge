@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["AOA", "ABA", "ACA"],
+  "key": {
+    "A": {
+      "item": "irons_spellbooks:arcane_essence"
+    },
+    "O": {
+      "item": "chaosticspells:chaos_upgrade_orb"
+    },
+    "B": {
+      "item": "born_in_chaos_v1:bonescaller_staff"
+    },
+    "C": {
+      "item": "irons_spellbooks:cinder_essence"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "chaosticspells:bonescaller_staff"
+  }
+}

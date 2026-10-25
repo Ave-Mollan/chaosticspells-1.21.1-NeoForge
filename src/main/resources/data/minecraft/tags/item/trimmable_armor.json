@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "chaosticspells:missionary_hat_helmet",
+    "chaosticspells:magic_nightmare_helmet",
+    "chaosticspells:magic_nightmare_chestplate",
+    "chaosticspells:magic_nightmare_leggings",
+    "chaosticspells:magic_nightmare_boots",
+    "chaosticspells:magic_dark_metal_helmet",
+    "chaosticspells:crowned_magic_dark_metal_helmet",
+    "chaosticspells:magic_dark_metal_chestplate",
+    "chaosticspells:magic_dark_metal_leggings",
+    "chaosticspells:magic_dark_metal_boots"
+  ]
+}

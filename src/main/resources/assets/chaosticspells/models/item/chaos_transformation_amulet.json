@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "chaosticspells:item/chaos_transformation_amulet_base",
+    "layer1": "chaosticspells:item/chaos_transformation_amulet_overlay"
+  }
+}

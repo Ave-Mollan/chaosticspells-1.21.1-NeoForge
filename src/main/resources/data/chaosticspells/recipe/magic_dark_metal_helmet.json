@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    { "item": "born_in_chaos_v1:dark_metal_armor_helmet" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:arcane_essence" },
+    { "item": "chaosticspells:chaos_rune" },
+    { "item": "irons_spellbooks:dragonskin" }
+  ],
+  "result": {
+    "count": 1,
+    "id": "chaosticspells:magic_dark_metal_helmet"
+  }
+}

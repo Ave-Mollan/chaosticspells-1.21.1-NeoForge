@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "O": {
+      "item": "irons_spellbooks:upgrade_orb"
+    },
+    "R": {
+      "item": "chaosticspells:chaos_rune"
+    }
+  },
+  "pattern": ["RRR", "ROR", "RRR"],
+  "result": {
+    "count": 1,
+    "id": "chaosticspells:chaos_upgrade_orb"
+  }
+}

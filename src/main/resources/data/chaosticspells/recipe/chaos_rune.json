@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["CCC", "CRC", "CCC"],
+  "key": {
+    "C": { "tag": "chaosticspells:chaos_focus" },
+    "R": { "item": "irons_spellbooks:blank_rune" }
+  },
+  "result": {
+    "id": "chaosticspells:chaos_rune",
+    "count": 1
+  }
+}

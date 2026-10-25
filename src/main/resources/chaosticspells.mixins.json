@@ -1,0 +1,27 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "plugin": "com.avemollan.chaosticspells.mixin.ChaosticSpellsMixinConfigPlugin",
+  "package": "com.avemollan.chaosticspells.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "AbstractSpellMixin",
+    "MagicManagerRegenBornInChaosManaMixin",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_Entity_ItemStack",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_xyz_Entity_ItemStack",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_xyz_Entity",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_Event_xyz_Entity",
+    "compat.bicnightmare.BcNightmareCompatMixin_Entity",
+    "compat.bicnightmare.BcNightmareCompatMixin_Entity_Entity_A",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_Entity_Entity",
+    "compat.bicnightmare.BcNightmareCompatMixin_Accessor_xyz_Entity_Entity",
+    "compat.bicdarkmetal.BcDarkMetalArmorPercentThresholdMixin"
+  ],
+  "client": [
+    "ClientEntityMagicSummonGlowColorMixin",
+    "ClientMinecraftMagicSummonGlowMixin"
+  ]
+}

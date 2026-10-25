@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    { "item": "born_in_chaos_v1:nightmare_mantleofthe_night_boots" },
+    { "item": "chaosticspells:chaos_rune" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:magic_cloth" },
+    { "item": "irons_spellbooks:arcane_essence" }
+  ],
+  "result": {
+    "count": 1,
+    "id": "chaosticspells:magic_nightmare_boots"
+  }
+}

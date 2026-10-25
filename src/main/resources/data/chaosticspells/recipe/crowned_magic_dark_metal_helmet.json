@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "irons_spellbooks:tarnished_helmet"
+  },
+  "base": {
+    "item": "chaosticspells:magic_dark_metal_helmet"
+  },
+  "result": {
+    "count": 1,
+    "id": "chaosticspells:crowned_magic_dark_metal_helmet"
+  },
+  "template": {
+    "item": "born_in_chaos_v1:dark_upgrade"
+  }
+}
