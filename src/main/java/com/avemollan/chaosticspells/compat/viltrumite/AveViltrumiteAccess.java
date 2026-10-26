@@ -9,10 +9,17 @@ import net.neoforged.fml.ModList;
 public final class AveViltrumiteAccess {
     public static final String ENABLED_TAG = "chaosticspells:ave_viltrumite";
 
-    /** ViltrumiteFlight invokes stopFlight even when already stopped. Preserve vanilla game modes. */
+    public static final String GRABBED_TAG = "ViltrumiteGrabbed", RELEASE_TAG = "chaosticspells:ave_grab_release";
+
+    /**
+     * Replaces stopFlight's flying write and its unconditional onUpdateAbilities: ViltrumiteFlight calls it every tick
+     * for every player. Vanilla modes and humans (whose custom flight is always NONE) keep any other flight source.
+     */
     public static void stopVanillaFlying(net.minecraft.world.entity.player.Abilities abilities, boolean flying, Entity entity) {
-        if (entity instanceof net.minecraft.world.entity.player.Player player && (player.isCreative() || player.isSpectator())) return;
+        if (!(entity instanceof net.minecraft.world.entity.player.Player player) || player.isCreative() || player.isSpectator()
+                || abilities.flying == flying || !isActive(player) && !player.getTags().contains(GRABBED_TAG)) return;
         abilities.flying = flying;
+        player.onUpdateAbilities();
     }
 
     public static boolean available() {
@@ -36,8 +43,20 @@ public final class AveViltrumiteAccess {
         return isOwner(entity) && entity instanceof AveRaceState state && state.chaosticspells$isViltrumite();
     }
 
+    /** Guards Core's per-tick callback. Also undoes the grab's mayfly when Core's failsafe drops the tag without releaseTarget. */
     public static boolean needsCoreTick(Entity entity) {
-        return isActive(entity) || entity.getTags().contains("ViltrumiteGrabbed");
+        if (isActive(entity)) return true;
+        if (entity.getTags().contains(GRABBED_TAG)) {
+            entity.addTag(RELEASE_TAG);
+            return true;
+        }
+        if (entity.removeTag(RELEASE_TAG) && entity instanceof net.minecraft.world.entity.player.Player player
+                && !player.isCreative() && !player.isSpectator()) {
+            player.getAbilities().mayfly = false;
+            player.getAbilities().flying = false;
+            player.onUpdateAbilities();
+        }
+        return false;
     }
 
     public static boolean isViltrumiteNamespace(String namespace) {

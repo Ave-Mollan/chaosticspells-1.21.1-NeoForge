@@ -5,6 +5,8 @@ import java.util.List;
 import com.avemollan.chaosticspells.item.OwnersWhipItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
@@ -26,9 +28,12 @@ public final class WhipSweep {
         double yaw = Math.toRadians(player.getYRot());
         Vec3 right = new Vec3(-Math.cos(yaw), 0, -Math.sin(yaw));
         Vec3 up = right.cross(forward).normalize();
-        for (var entity : player.level().getEntities(player, player.getBoundingBox().inflate(OwnersWhipItem.REACH + 1),
-                entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator() && entity.isPickable())) {
-            if (entity instanceof Player other && (!player.getServer().isPvpAllowed() || !player.canHarmPlayer(other))) continue;
+        // ServerPlayer.canHarmPlayer already includes the server PvP rule and team friendly fire.
+        for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(OwnersWhipItem.REACH + 1),
+                entity -> entity != player && entity.isAlive() && !entity.isSpectator() && entity.isPickable() && !(entity instanceof ArmorStand)
+                        && entity.getRootVehicle() != player.getRootVehicle() && !entity.isAlliedTo(player) && !player.isAlliedTo(entity)
+                        && !(entity instanceof OwnableEntity pet && player.getUUID().equals(pet.getOwnerUUID()))
+                        && !(entity instanceof Player other && !player.canHarmPlayer(other)))) {
             var box = entity.getBoundingBox();
             Vec3 delta = box.getCenter().subtract(origin);
             double front = delta.dot(forward), sideways = delta.dot(right), height = delta.dot(up);
@@ -40,7 +45,7 @@ public final class WhipSweep {
             if (Math.abs(angle) > HALF_ARC_DEGREES + allowance || Math.abs(angle - centerAngle) > halfWidth + allowance) continue;
             var wall = player.level().clip(new ClipContext(player.getEyePosition(), box.getCenter(),
                     ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
-            if (wall.getType() == HitResult.Type.MISS) result.add((LivingEntity) entity);
+            if (wall.getType() == HitResult.Type.MISS) result.add(entity);
         }
         return result;
     }

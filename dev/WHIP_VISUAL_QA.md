@@ -36,3 +36,18 @@
 
 После проверки собрать обычный `build` без флага `whip_visual_test` и проверить,
 что JAR не содержит `WhipVisualProbe` и классов `gametest`.
+
+## Команды /ave без OP (whip.8)
+
+Отдельный сценарий использует одного настоящего клиента и новый плоский мир
+`ave-command-qa-8` с отключёнными читами. Он проверяет полученное от сервера дерево
+команд, разбор всех шести подкоманд на клиенте, `@s`/`@e`, подсказку `@s`, выдачу
+трёх алмазов и эффект скорости через настоящие пакеты команд. Обычные селекторы
+вне `/ave` должны остаться ограниченными; OP после выполнения не появляется.
+
+```powershell
+.\gradlew.bat runClient -Pwhip_visual_test=true -Pave_command_test=true -Pwhip_visual_role=host -Pwith_viltrumite=true -Pave_client_uuid=516e7a70-c667-499b-9870-2783e9e7b214 -Pave_client_name=AveMollan -Pave_client_dir=ave-commands-client --offline --no-daemon --console=plain
+```
+
+Результат: `build/ave-commands-session/commands-done.txt` либо `commands-failure.txt`.
+Клиент завершается автоматически; второй клиент для этого сценария не нужен.

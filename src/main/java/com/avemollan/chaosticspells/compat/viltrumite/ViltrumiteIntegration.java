@@ -53,7 +53,7 @@ public final class ViltrumiteIntegration {
     public static void commands(RegisterCommandsEvent event) {
         restrictNativeCommand(event.getDispatcher().getRoot().getChild("viltrumite"));
         event.getDispatcher().register(Commands.literal("ave")
-                .requires(source -> AveViltrumiteAccess.isOwner(source.getEntity()))
+                .requires(com.avemollan.chaosticspells.commands.AveCommands::isOwner)
                 .then(Commands.literal("race")
                         .executes(context -> changeRace(context.getSource().getPlayerOrException(),
                                 !AveViltrumiteAccess.selected(context.getSource().getPlayerOrException())))
@@ -74,7 +74,10 @@ public final class ViltrumiteIntegration {
 
     public static int changeRace(ServerPlayer player, boolean viltrumite) {
         if (!AveViltrumiteAccess.isOwner(player)) return 0;
-        if (!viltrumite) clearPowers(player);
+        if (!viltrumite) {
+            clearPowers(player);
+            clearWorldEffects();
+        }
         player.getPersistentData().putBoolean(AveViltrumiteAccess.ENABLED_TAG, viltrumite);
         synchronize(player);
         player.getServer().getCommands().sendCommands(player);
@@ -123,6 +126,19 @@ public final class ViltrumiteIntegration {
                 if (AveViltrumiteAccess.isViltrumiteNamespace(modifier.id().getNamespace())) attribute.removeModifier(modifier.id());
             }
         }
+    }
+
+    /** Core keeps these in global maps ticked only from the owner's (guarded) tick; stop them with the powers. */
+    private static void clearWorldEffects() {
+        dev.baranhan.viltrumitecore.util.PunchImpactManager.LAUNCHED_ENTITIES.clear();
+        dev.baranhan.viltrumitecore.util.ChopImpactManager.BLEEDING_ENTITIES.clear();
+        dev.baranhan.viltrumitecore.util.ChopImpactManager.CHOP_HIT_MEMORY.clear();
+        dev.baranhan.viltrumitecore.util.ThunderClapManager.ACTIVE_CLAPS.clear();
+    }
+
+    @SubscribeEvent
+    public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (AveViltrumiteAccess.isActive(event.getEntity())) clearWorldEffects();
     }
 
     @SubscribeEvent

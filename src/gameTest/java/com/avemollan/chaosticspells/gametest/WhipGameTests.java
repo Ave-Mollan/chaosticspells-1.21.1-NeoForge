@@ -72,13 +72,15 @@ public final class WhipGameTests {
             helper.assertTrue(target.getHealth() == 100, "Charged damage must wait for the recording's first crack");
         });
         advance(helper, owner, 46, 97);
-        helper.runAfterDelay(80, () -> helper.assertTrue(target.getHealth() == 80, "A full-charge single lash must deal 20; health="+target.getHealth()));
-        helper.runAfterDelay(96, () -> {
-            helper.assertTrue(target.getHealth() == 80, "Full charge must not automatically create a second stroke; health="+target.getHealth());
-            helper.assertTrue(OwnersWhipItem.damageForTicks(10000) == 20, "Damage remains capped at 20");
+        helper.runAfterDelay(71, () -> {
+            // Past the follow-up window, while the stroke still runs and the server cooldown holds.
             WhipCombat.handle(owner, WhipActionPayload.START);
             WhipCombat.handle(owner, WhipActionPayload.RELEASE);
-            helper.assertTrue(target.getHealth() == 80, "The active sequence and server cooldown must prevent extra attacks");
+        });
+        helper.runAfterDelay(80, () -> helper.assertTrue(target.getHealth() == 80, "A full-charge single lash must deal 20; health="+target.getHealth()));
+        helper.runAfterDelay(96, () -> {
+            helper.assertTrue(target.getHealth() == 80, "Full charge, the active sequence and the cooldown must not create a second stroke; health="+target.getHealth());
+            helper.assertTrue(OwnersWhipItem.damageForTicks(10000) == 20, "Damage remains capped at 20");
         });
         helper.runAfterDelay(98, () -> finish(helper, owner, target));
     }
@@ -263,7 +265,7 @@ public final class WhipGameTests {
         });
         helper.runAfterDelay(9, () -> WhipCombat.handle(owner,WhipActionPayload.START));
         advance(helper,owner,1,74);
-        helper.runAfterDelay(32, () -> helper.assertTrue(target.getHealth()==95,"The first stroke must still hit only once"));
+        helper.runAfterDelay(29, () -> helper.assertTrue(target.getHealth()==95,"The first stroke must still hit only once"));
         helper.runAfterDelay(52, () -> helper.assertTrue(target.getHealth()==90,"A repeat press must add one five-damage follow-up"));
         helper.runAfterDelay(75, () -> {
             helper.assertTrue(target.getHealth()==90,"Repeated presses cannot add a third stroke");
@@ -278,7 +280,7 @@ public final class WhipGameTests {
         WhipCombat.handle(owner,WhipActionPayload.START);
         WhipCombat.handle(owner,WhipActionPayload.RELEASE);
         helper.runAfterDelay(8, () -> WhipCombat.handle(owner,WhipActionPayload.START));
-        helper.runAfterDelay(35, () -> {
+        helper.runAfterDelay(25, () -> {
             owner.getInventory().selected=1;
             owner.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(ChaosticItemRegistry.OWNERS_WHIP.get()));
         });
@@ -287,6 +289,57 @@ public final class WhipGameTests {
             helper.assertTrue(target.getHealth()==95,"Switching slots must cancel a queued second stroke");
             finish(helper,owner,target);
         });
+    }
+
+    @GameTest(template = "empty", batch = "whip_13")
+    public static void deathRetainsCursorWhipAndSurvivesNonDeathClone(GameTestHelper helper) {
+        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        owner.containerMenu.setCarried(new ItemStack(ChaosticItemRegistry.OWNERS_WHIP.get()));
+        NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingDeathEvent(owner, owner.damageSources().generic()));
+        helper.assertTrue(owner.getInventory().countItem(ChaosticItemRegistry.OWNERS_WHIP.get()) == 0 && owner.containerMenu.getCarried().isEmpty(),
+                "Death must take the held and cursor whips out of reach of grave mods and menu-close drops");
+        // The End exit portal recreates the player through a clone with wasDeath=false.
+        ServerPlayer returned = player(helper, OwnersWhipItem.OWNER_UUID);
+        returned.getInventory().clearContent();
+        NeoForge.EVENT_BUS.post(new PlayerEvent.Clone(returned, owner, false));
+        WhipRetention.restore(returned);
+        helper.assertTrue(returned.getInventory().countItem(ChaosticItemRegistry.OWNERS_WHIP.get()) == 2, "Both retained whips must follow every clone");
+        WhipCombat.cancel(owner);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "whip_14")
+    public static void creativeFullInventoryKeepsWhipPending(GameTestHelper helper) {
+        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        var drops = new ArrayList<ItemEntity>();
+        drops.add(new ItemEntity(helper.getLevel(), owner.getX(), owner.getY(), owner.getZ(), owner.getMainHandItem().copy()));
+        NeoForge.EVENT_BUS.post(new LivingDropsEvent(owner, owner.damageSources().generic(), drops, false));
+        owner.getAbilities().instabuild = true;
+        for (int i = 0; i < owner.getInventory().items.size(); i++) owner.getInventory().items.set(i, new ItemStack(Items.COBBLESTONE, 64));
+        WhipRetention.restore(owner);
+        owner.getInventory().items.set(5, ItemStack.EMPTY);
+        WhipRetention.restore(owner);
+        helper.assertTrue(owner.getInventory().countItem(ChaosticItemRegistry.OWNERS_WHIP.get()) == 1,
+                "Inventory.add must not void the pending whip for a creative owner with a full inventory");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "whip_15")
+    public static void sweepSparesOwnPetsArmorStandsAndMount(GameTestHelper helper) {
+        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        for (int x = -1; x <= 3; x++) for (int z = 0; z <= 6; z++) for (int y = 1; y <= 3; y++) helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
+        Zombie control = target(helper);
+        var wolf = helper.spawn(EntityType.WOLF, new BlockPos(0, 1, 5));
+        wolf.setNoAi(true);
+        wolf.setOwnerUUID(owner.getUUID());
+        wolf.setTame(true, false);
+        var stand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(2, 1, 5));
+        var targets = WhipCombat.findTargets(owner);
+        helper.assertTrue(targets.contains(control), "The control target in the arc must be found");
+        helper.assertTrue(!targets.contains(wolf) && !targets.contains(stand), "Own pets and armor stands are not whip targets; targets=" + targets);
+        wolf.discard();
+        stand.discard();
+        finish(helper, owner, control);
     }
 
     private static void advance(GameTestHelper helper,ServerPlayer owner,int first,int last) {

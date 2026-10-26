@@ -9,12 +9,23 @@ public final class WorldWhipRope {
     public static final int POINTS=25, SEGMENTS=24, SUBSTEPS=8, ITERATIONS=12;
     private final double[] x=new double[POINTS],y=new double[POINTS],z=new double[POINTS];
     private final double[] ox=new double[POINTS],oy=new double[POINTS],oz=new double[POINTS],ground=new double[POINTS];
-    private static final double[] MASS=new double[POINTS];
+    private static final double[] MASS=new double[POINTS],BEND=new double[POINTS];
     private Frame previous;
     private boolean released;
     private double movement;
     private double floorDrag;
-    static { for(int i=2;i<POINTS;i++) MASS[i]=1/(.008+.992*Math.pow(1-i/24.0,2)); }
+    static {
+        for(int i=2;i<POINTS;i++) MASS[i]=1/(.008+.992*Math.pow(1-i/24.0,2));
+        // The thick fall near the grip resists bending far more than the cracker, so it follows the hand like a lever.
+        for(int i=1;i<SEGMENTS-1;i++) BEND[i]=.3*Math.pow(1-i/24.0,2)+.02;
+    }
+    /**
+     * Momentum the stroke hands down the lash, which this coarse chain under-transfers on its own.
+     * dir: unit world direction; accel: blocks/tick^2; wave: 0..1, how far from the grip the push has travelled;
+     * limit: no push once a point already moves this fast along dir (blocks/tick);
+     * damping: per-substep velocity kept at the tip while the crack spends its energy (0 = normal).
+     */
+    public record Drive(Point dir,double accel,double wave,double limit,double damping) {}
     public WorldWhipRope(Frame frame) { Arrays.fill(ground,Double.NaN); reset(frame); }
     public void ground(int i,double height) { ground[i]=height; }
     public boolean released() { return released; }
@@ -32,7 +43,7 @@ public final class WorldWhipRope {
             x[i]=ox[i]=p.x();y[i]=oy[i]=p.y();z[i]=oz[i]=p.z();
         }
     }
-    public void step(Frame frame,boolean release,boolean attacking) {
+    public void step(Frame frame,boolean release,boolean attacking,Drive drive) {
         if(!released && !release) {
             for(int i=0;i<POINTS;i++) {
                 Point p=frame.point(WhipRope.restX(i),WhipRope.restY(i),WhipRope.restZ(i));
@@ -46,19 +57,26 @@ public final class WorldWhipRope {
         }
         double[] start=coordinates();
         double damping=attacking?.995:.978;
-        floorDrag=attacking?.9995:.995;
+        floorDrag=attacking?.996:.995;
         for(int sub=0;sub<SUBSTEPS;sub++) {
             for(int i=2;i<POINTS;i++) {
-                double vx=(x[i]-ox[i])*damping,vy=(y[i]-oy[i])*damping,vz=(z[i]-oz[i])*damping;
+                double d=drive!=null && drive.damping()>0?damping-(damping-drive.damping())*i/SEGMENTS:damping;
+                double vx=(x[i]-ox[i])*d,vy=(y[i]-oy[i])*d,vz=(z[i]-oz[i])*d;
                 ox[i]=x[i];oy[i]=y[i];oz[i]=z[i];
                 x[i]+=vx;y[i]+=vy-.035/(SUBSTEPS*SUBSTEPS);z[i]+=vz;
+                if(drive!=null && drive.accel()>0) {
+                    Point dir=drive.dir();
+                    double w=Math.clamp((drive.wave()*(POINTS+2)-i)/3,0,1),along=(vx*dir.x()+vy*dir.y()+vz*dir.z())*SUBSTEPS;
+                    double a=drive.accel()*w*w*(3-2*w)*Math.clamp(1-along/drive.limit(),0,1)/(SUBSTEPS*SUBSTEPS);
+                    x[i]+=dir.x()*a;y[i]+=dir.y()*a;z[i]+=dir.z()*a;
+                }
             }
             double t=(sub+1.0)/SUBSTEPS;
             for(int it=0;it<ITERATIONS;it++) {
                 pin(frame,t);
                 for(int i=1;i<SEGMENTS;i++) link(i,i+1,WhipRope.length(i),1);
                 for(int i=SEGMENTS-1;i>=1;i--) link(i,i+1,WhipRope.length(i),1);
-                if(attacking) for(int i=1;i<SEGMENTS-1;i++) link(i,i+2,WhipRope.length(i)+WhipRope.length(i+1),.025*(1-i/26.0));
+                for(int i=1;i<SEGMENTS-1;i++) link(i,i+2,WhipRope.length(i)+WhipRope.length(i+1),attacking?BEND[i]:BEND[i]*.4);
                 floor();
             }
             pin(frame,t);

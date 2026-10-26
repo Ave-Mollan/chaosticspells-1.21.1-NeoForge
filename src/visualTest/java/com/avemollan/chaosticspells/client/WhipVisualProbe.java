@@ -35,7 +35,10 @@ import org.lwjgl.glfw.GLFW;
 public final class WhipVisualProbe {
     static final String ROLE=System.getProperty("whip.visual.role","host");
     static final Path OUT=Path.of(System.getProperty("whip.visual.output","build/whip7-visual-session"));
-    static final String WORLD="whip-visual-qa-7c";
+    static final boolean COMMANDS=Boolean.getBoolean("whip.visual.commands");
+    static final String WORLD=COMMANDS?"ave-command-qa-8":"whip-visual-qa-7c";
+    static int commandStarted=-1;
+    static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> commandSuggestions;
     static final Map<Long,Integer> TRACE=new TreeMap<>();
     static final Set<String> SHOTS=new HashSet<>();
     static boolean initialized,opened,prepared,ready,started,finished;
@@ -67,7 +70,7 @@ public final class WhipVisualProbe {
             opened=true;write("host-loading.txt","Creating or loading the isolated QA world");
             var flows=c.createWorldOpenFlows();
             if(new java.io.File(c.gameDirectory,"saves/"+WORLD+"/level.dat").exists())flows.openWorld(WORLD,()->{});
-            else flows.createFreshLevel(WORLD,new LevelSettings("Whip visual QA",GameType.CREATIVE,false,Difficulty.PEACEFUL,true,new GameRules(),WorldDataConfiguration.DEFAULT),
+            else flows.createFreshLevel(WORLD,new LevelSettings("Whip visual QA",GameType.CREATIVE,false,Difficulty.PEACEFUL,!COMMANDS,new GameRules(),WorldDataConfiguration.DEFAULT),
                     new WorldOptions(0,false,false),r->r.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions(),c.screen);
         }
     }
@@ -84,6 +87,7 @@ public final class WhipVisualProbe {
             owner.setGameMode(GameType.CREATIVE);owner.teleportTo(.5,65,.5);owner.setYRot(0);owner.yBodyRot=0;owner.setXRot(0);
             owner.getInventory().clearContent();owner.setItemSlot(EquipmentSlot.MAINHAND,ChaosticItemRegistry.OWNERS_WHIP.get().getDefaultInstance());
             owner.containerMenu.broadcastChanges();
+            if(COMMANDS){server.getCommands().sendCommands(owner);return;}
             try {server.setUsesAuthentication(false);server.getConnection().startTcpServerListener(InetAddress.getByName("127.0.0.1"),25574);}
             catch(Exception e){write("host-failure.txt",e.toString());}
             ChaosticSpells.LOGGER.info("[WHIP-QA] Loopback-only test server is listening on 127.0.0.1:25574");
@@ -104,6 +108,7 @@ public final class WhipVisualProbe {
         if(c.level==null || c.player==null)return;
         worldTicks++;c.mouseHandler.releaseMouse();
         if(ROLE.equals("host") && !prepared && c.getSingleplayerServer()!=null){prepared=true;setupServer();}
+        if(COMMANDS){checkCommands(c);return;}
         var owner=c.level.getPlayerByUUID(OwnersWhipItem.OWNER_UUID);
         var state=owner==null?null:WhipClientMotion.forPlayer(owner);
         if(state==null)return;
@@ -139,6 +144,39 @@ public final class WhipVisualProbe {
         }
         if(finished && (!ROLE.equals("host") || Files.exists(OUT.resolve("observer-done.txt")))) {if(++doneTicks>30)c.stop();}
     }
+    static void checkCommands(Minecraft c) {
+        try {
+            if(finished){if(++doneTicks>20)c.stop();return;}
+            if(worldTicks>500)throw new IllegalStateException("Timed out waiting for command tree or responses");
+            if(worldTicks<80 || c.player.connection.getCommands().getRoot().getChild("ave")==null)return;
+            if(commandStarted<0) {
+                if(c.player.hasPermissions(2))throw new IllegalStateException("QA owner unexpectedly has OP/cheats");
+                var dispatcher=c.player.connection.getCommands();var source=c.player.connection.getSuggestionsProvider();
+                for(String input:List.of("ave give @s minecraft:diamond 3","ave effect give @s minecraft:speed 10 1 true",
+                        "ave damage @e[limit=1] 4 minecraft:generic","ave kill @e[limit=1]",
+                        "ave locate biome minecraft:plains","ave tp @s ~1 ~2 ~3")) {
+                    var parsed=dispatcher.parse(input,source);
+                    if(parsed.getReader().canRead() || !parsed.getExceptions().isEmpty())throw new IllegalStateException("Client failed to parse "+input+": "+parsed.getExceptions());
+                }
+                boolean denied=false;
+                try{net.minecraft.commands.arguments.EntityArgument.entities().parse(new com.mojang.brigadier.StringReader("@s"),source);}
+                catch(com.mojang.brigadier.exceptions.CommandSyntaxException expected){denied=true;}
+                if(!denied)throw new IllegalStateException("Unprefixed selector parsing unexpectedly gained permissions");
+                commandSuggestions=dispatcher.getCompletionSuggestions(dispatcher.parse("ave give @",source));
+                c.player.connection.sendCommand("ave give @s minecraft:diamond 3");
+                c.player.connection.sendCommand("ave effect give @s minecraft:speed 10 1 true");
+                commandStarted=worldTicks;
+            } else if(worldTicks-commandStarted>=60 && commandSuggestions.isDone()) {
+                if(c.player.getInventory().countItem(net.minecraft.world.item.Items.DIAMOND)!=3)throw new IllegalStateException("Give failed over the real command connection");
+                if(!c.player.hasEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED))throw new IllegalStateException("Effect failed over the real command connection");
+                if(c.player.hasPermissions(2))throw new IllegalStateException("Alias permanently elevated the player");
+                if(commandSuggestions.join().getList().stream().noneMatch(s->s.getText().equals("@s")))throw new IllegalStateException("Missing server-backed @s completion");
+                write("commands-done.txt","Native owner client with cheats/OP disabled: all six aliases parse, selectors complete, give delivers 3 diamonds and effect applies through real command packets. Unprefixed selectors remain restricted; OP stays disabled.");
+                ChaosticSpells.LOGGER.info("[AVE-COMMAND-QA] All native client and command packet checks passed");finished=true;
+            }
+        } catch(Exception failure){write("commands-failure.txt",failure.toString());ChaosticSpells.LOGGER.error("[AVE-COMMAND-QA] Failed",failure);c.stop();}
+    }
+
     @SubscribeEvent public static void render(RenderFrameEvent.Post e) {
         var client=Minecraft.getInstance();bootstrap(client);
         if(++frames%100==0)write(ROLE+"-render.txt","frame="+frames+", screen="+(client.screen==null?"null":client.screen.getClass().getSimpleName())+", overlay="+(client.getOverlay()==null?"null":client.getOverlay().getClass().getSimpleName()));

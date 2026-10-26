@@ -37,9 +37,12 @@ public final class WhipClientMotion {
             Vec3 b=new Vec3(current.x()+current.points()[j],current.y()+current.points()[j+1],current.z()+current.points()[j+2]);
             return a.lerp(b,t);
         }
-        public WhipArmPose.Angles arm(double partial,boolean left) {
+        public WhipArmPose.Pose pose(double partial,boolean left) {
             return WhipArmPose.sample(current.kind()==WhipMotionPayload.ATTACK,time(partial)-current.started(),
                     current.peakA(),current.peakB(),current.duration(),current.side(),left);
+        }
+        public double weight(double partial) {
+            return WhipArmPose.weight(current.kind()==WhipMotionPayload.ATTACK,time(partial)-current.started(),current.duration());
         }
     }
     public static void accept(WhipMotionPayload p) {
@@ -49,7 +52,8 @@ public final class WhipClientMotion {
         if(level==null || !p.dimension().equals(level.dimension().location()))return;
         if(p.kind()==WhipMotionPayload.HIDDEN){STATES.remove(p.player());return;}
         Motion s=STATES.get(p.player());
-        if(s==null || s.current.item()!=p.item()){STATES.put(p.player(),new Motion(p));return;}
+        // After leaving tracking range the last snapshot is stale; start over instead of sliding from it.
+        if(s==null || s.current.item()!=p.item() || p.tick()-s.current.tick()>40){STATES.put(p.player(),new Motion(p));return;}
         if(p.tick()<s.current.tick())return;
         if(p.tick()>s.current.tick())s.previous=s.current;
         s.current=p;
@@ -57,6 +61,7 @@ public final class WhipClientMotion {
     @SubscribeEvent public static void tick(ClientTickEvent.Post e) {
         var level=Minecraft.getInstance().level;
         if(currentLevel!=level){STATES.clear();currentLevel=level;}
+        else if(level!=null && !STATES.isEmpty() && level.getPlayerByUUID(OwnersWhipItem.OWNER_UUID)==null) STATES.clear();
     }
     public static Motion forPlayer(Player p){return STATES.get(p.getUUID());}
     public static Motion forStack(ItemStack stack,ItemDisplayContext context) {

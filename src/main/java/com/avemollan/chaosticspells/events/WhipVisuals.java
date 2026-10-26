@@ -29,15 +29,15 @@ public final class WhipVisuals {
         final WorldWhipRope rope;
         byte kind=WhipMotionPayload.REST;
         long started,lastTick=Long.MIN_VALUE,lastSent=Long.MIN_VALUE;
-        int peakA=30,peakB=-1,duration=50,side=1,still;
+        int peakA=WhipArmPose.CRACK,peakB=-1,duration=WhipArmPose.LENGTH,side=1,still;
         WhipArmPose.Frame frame;
         State(ServerPlayer player,long item) {
             this.item=item;dimension=player.level().dimension();frame=frame(player,this);rope=new WorldWhipRope(frame);
         }
     }
     private static WhipArmPose.Frame frame(ServerPlayer p,State s) {
-        var angles=WhipArmPose.sample(s.kind==WhipMotionPayload.ATTACK,p.level().getGameTime()-s.started,s.peakA,s.peakB,s.duration,s.side,p.getMainArm()==HumanoidArm.LEFT);
-        return WhipArmPose.frame(p.getX(),p.getY(),p.getZ(),p.yBodyRot,p.getMainArm()==HumanoidArm.LEFT,false,p.isCrouching(),angles);
+        var pose=WhipArmPose.sample(s.kind==WhipMotionPayload.ATTACK,p.level().getGameTime()-s.started,s.peakA,s.peakB,s.duration,s.side,p.getMainArm()==HumanoidArm.LEFT);
+        return WhipArmPose.frame(p.getX(),p.getY(),p.getZ(),p.yBodyRot,p.getMainArm()==HumanoidArm.LEFT,false,p.isCrouching(),pose);
     }
     private static State ensure(ServerPlayer p) {
         if(!OwnersWhipItem.isOwner(p) || !WhipCombat.holdsWhip(p) || !p.isAlive()) return null;
@@ -62,14 +62,14 @@ public final class WhipVisuals {
         if(shift>144) {s.rope.reset(frame);s.still=0;}
         if(s.lastTick!=time) {
             boolean attack=s.kind==WhipMotionPayload.ATTACK;
-            boolean release=attack && time-s.started>=3;
+            boolean release=attack && time-s.started>=WhipArmPose.RELEASE;
             if(s.still<20 || attack || shift>.000025) {
                 if(s.rope.released() || release) for(int i=2;i<WorldWhipRope.POINTS;i++) {
                     var point=s.rope.point(i);Vec3 v=new Vec3(point.x(),point.y(),point.z());
                     var floor=p.level().clip(new ClipContext(v.add(0,.9,0),v.add(0,-2,0),ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,p));
                     s.rope.ground(i,floor.getType()==HitResult.Type.BLOCK && floor.getDirection()==Direction.UP?floor.getLocation().y:Double.NaN);
                 }
-                s.rope.step(frame,release,attack);
+                s.rope.step(frame,release,attack,attack?WhipArmPose.drive(time-s.started,s.peakA,s.peakB,s.duration,p.yBodyRot):null);
                 s.still=!attack && shift<.000025 && s.rope.movement()<.0005?s.still+1:0;
             }
             s.frame=frame;s.lastTick=time;

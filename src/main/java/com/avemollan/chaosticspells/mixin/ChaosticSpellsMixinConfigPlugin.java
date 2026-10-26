@@ -97,6 +97,12 @@ public class ChaosticSpellsMixinConfigPlugin implements IMixinConfigPlugin {
             for (var instruction : method.instructions.toArray()) {
                 if (instruction instanceof FieldInsnNode field && field.getOpcode()==Opcodes.PUTFIELD
                         && field.owner.equals("net/minecraft/world/entity/player/Abilities") && field.name.equals("flying") && field.desc.equals("Z")) {
+                    // The helper resyncs only on change; drop the per-tick abilities packet that follows the write.
+                    var next = field.getNext();
+                    while (next != null && !(next instanceof MethodInsnNode)) next = next.getNext();
+                    if (!(next instanceof MethodInsnNode update) || !update.name.equals("onUpdateAbilities") || !update.desc.equals("()V"))
+                        throw new IllegalStateException("Unsupported ViltrumiteFlight stopFlight: no onUpdateAbilities after flying write");
+                    method.instructions.set(update,new InsnNode(Opcodes.POP));
                     method.instructions.insertBefore(field,new VarInsnNode(Opcodes.ALOAD,0));
                     method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,
                             "com/avemollan/chaosticspells/compat/viltrumite/AveViltrumiteAccess","stopVanillaFlying",
@@ -107,7 +113,7 @@ public class ChaosticSpellsMixinConfigPlugin implements IMixinConfigPlugin {
             }
         }
         if (count!=1) throw new IllegalStateException("Unsupported ViltrumiteFlight stopFlight.flying writes: "+count);
-        LOGGER.info("ChaosticSpells Ave policy: preserved creative/spectator flight in ViltrumiteFlight.stopFlight");
+        LOGGER.info("ChaosticSpells Ave policy: preserved vanilla flight and per-tick abilities sync in ViltrumiteFlight.stopFlight");
     }
 
     /** Guard the foreign callback rather than cancel vanilla tick/hand rendering. No external JAR is rewritten. */

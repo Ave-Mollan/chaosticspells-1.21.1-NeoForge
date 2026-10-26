@@ -23,6 +23,7 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 /** Client presentation only. Server-side checks remain authoritative. */
 public final class ViltrumiteClientPolicy {
     private static Boolean lastActive;
+    private static KeyMapping[] modKeys;
 
     public static void install() {
         NeoForge.EVENT_BUS.register(ViltrumiteClientPolicy.class);
@@ -62,9 +63,9 @@ public final class ViltrumiteClientPolicy {
         if (client.options == null) return;
         boolean enabled = active();
         if (!enabled) {
-            for (KeyMapping key : client.options.keyMappings) {
-                if (modKey(key)) while (key.consumeClick()) { /* Discard stale ability presses before activation. */ }
-            }
+            // Key registration is finished long before the first client tick.
+            if (modKeys == null) modKeys = Arrays.stream(client.options.keyMappings).filter(ViltrumiteClientPolicy::modKey).toArray(KeyMapping[]::new);
+            for (KeyMapping key : modKeys) while (key.consumeClick()) { /* Discard stale ability presses before activation. */ }
         }
         if (lastActive == null || lastActive != enabled) {
             CreativeTabsAccess.chaosticspells$invalidate(null);

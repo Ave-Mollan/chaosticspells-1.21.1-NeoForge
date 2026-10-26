@@ -10,6 +10,7 @@ import com.avemollan.chaosticspells.ChaosticSpells;
 import com.avemollan.chaosticspells.item.OwnersWhipItem;
 import com.avemollan.chaosticspells.network.WhipActionPayload;
 import com.avemollan.chaosticspells.network.WhipMotionPayload;
+import com.avemollan.chaosticspells.physics.WhipArmPose;
 import com.avemollan.chaosticspells.registry.ChaosticItemRegistry;
 import com.avemollan.chaosticspells.registry.WhipSounds;
 import net.minecraft.core.particles.ParticleTypes;
@@ -22,6 +23,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -51,8 +53,8 @@ public final class WhipCombat {
         boolean firstSound, secondSound;
         Attack(Charge grip, long started, float damage, int sound, int side) {
             this.grip = grip; this.started = started; this.damage = damage; this.sound = sound; this.side = side;
-            peakA = 30;
-            duration = peakA + 20;
+            peakA = WhipArmPose.CRACK;
+            duration = WhipArmPose.LENGTH;
         }
     }
     private static final Map<UUID, Attack> ATTACKS = new HashMap<>();
@@ -81,8 +83,10 @@ public final class WhipCombat {
             if (current != null) {
                 int age = (int) (player.level().getGameTime() - current.started);
                 if (valid(player, current.grip) && current.peakB < 0 && age > 0 && age <= current.peakA + 8) {
-                    current.peakB = Math.max(current.peakA + 20, age + 16);
-                    current.duration = current.peakB + 20;
+                    // The backhand starts once the first crack is out and replays the whole stroke.
+                    int start = Math.max(current.peakA + 2, age + 1);
+                    current.peakB = start + WhipArmPose.CRACK;
+                    current.duration = start + WhipArmPose.LENGTH;
                     player.getCooldowns().addCooldown(ChaosticItemRegistry.OWNERS_WHIP.get(), current.duration-age+3);
                     motion(player, WhipMotionPayload.ATTACK, current.started, current.peakA, current.peakB, current.duration, current.side);
                 }
@@ -145,26 +149,32 @@ public final class WhipCombat {
     private static void sweep(ServerPlayer player, Attack attack, int age, int peak, int side, Set<Integer> hit) {
         if (peak < 0 || age < peak - 3 || age > peak + 3) return;
         double angle = (-WhipSweep.HALF_ARC_DEGREES + (age - peak + 3) * (2 * WhipSweep.HALF_ARC_DEGREES / 6)) * side;
+        DamageSource source = null;
         for (LivingEntity target : WhipSweep.targets(player, angle, 24)) {
-            if (hit.add(target.getId())) strike(player, target, attack.damage);
+            if (!hit.add(target.getId())) continue;
+            if (source == null) source = player.damageSources().source(DAMAGE_TYPE, player);
+            strike(player, target, source, attack.damage);
         }
     }
 
-    private static void strike(ServerPlayer player, LivingEntity target, float damage) {
-        var holder = player.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE_TYPE);
-        if (!target.hurt(new DamageSource(holder, player), damage)) return;
+    private static void strike(ServerPlayer player, LivingEntity target, DamageSource source, float damage) {
+        if (!target.hurt(source, damage)) return;
         Vec3 direction = new Vec3(target.getX() - player.getX(), 0, target.getZ() - player.getZ());
         if (direction.lengthSqr() < 0.001) direction = new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z);
-        direction = direction.normalize().scale(0.8 + 0.4 * (damage - 5) / 15);
-        target.setDeltaMovement(direction.x, Math.max(target.getDeltaMovement().y, 0.25), direction.z);
-        target.hurtMarked = true;
+        // Golems and other heavy mobs keep their knockback resistance.
+        double resist = 1 - Math.clamp(target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE), 0, 1);
+        if (resist > 0) {
+            direction = direction.normalize().scale((0.8 + 0.4 * (damage - 5) / 15) * resist);
+            target.setDeltaMovement(direction.x, Math.max(target.getDeltaMovement().y, 0.25 * resist), direction.z);
+            target.hurtMarked = true;
+        }
         player.serverLevel().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + target.getBbHeight() * 0.6,
                 target.getZ(), 8, 0.2, 0.2, 0.2, 0.1);
     }
 
     @SubscribeEvent
     public static void tick(PlayerTickEvent.Post event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!(event.getEntity() instanceof ServerPlayer player) || !OwnersWhipItem.isOwner(player)) return;
         Attack attack = ATTACKS.get(player.getUUID());
         if (attack != null) {
             if (!valid(player, attack.grip)) cancel(player);
@@ -172,11 +182,11 @@ public final class WhipCombat {
                 int age = (int) (player.level().getGameTime() - attack.started);
                 if (!attack.firstSound && age >= attack.peakA-WhipSounds.peak(attack.sound)) {
                     attack.firstSound = true;
-                    player.serverLevel().playSound(null, player.blockPosition(), WhipSounds.single(attack.sound), SoundSource.PLAYERS, .9f, 1f);
+                    player.serverLevel().playSound(null, player.getX(), player.getEyeY(), player.getZ(), WhipSounds.single(attack.sound), SoundSource.PLAYERS, .9f, 1f);
                 }
                 if (attack.peakB >= 0 && !attack.secondSound && age >= attack.peakB-WhipSounds.FOLLOW_UP_PEAK) {
                     attack.secondSound = true;
-                    player.serverLevel().playSound(null, player.blockPosition(), WhipSounds.FOLLOW_UP.get(), SoundSource.PLAYERS, .9f, 1f);
+                    player.serverLevel().playSound(null, player.getX(), player.getEyeY(), player.getZ(), WhipSounds.FOLLOW_UP.get(), SoundSource.PLAYERS, .9f, 1f);
                 }
                 sweep(player, attack, age, attack.peakA, attack.side, attack.hitA);
                 sweep(player, attack, age, attack.peakB, -attack.side, attack.hitB);

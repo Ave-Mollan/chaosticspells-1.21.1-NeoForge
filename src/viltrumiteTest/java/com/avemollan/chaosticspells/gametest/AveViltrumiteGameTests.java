@@ -57,10 +57,39 @@ public final class AveViltrumiteGameTests {
             flight(player).stopFlight();
             helper.assertTrue(player.getAbilities().flying,"Stopping custom flight must preserve spectator flight");
             player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            player.getAbilities().mayfly=true;
             player.getAbilities().flying=true;
             flight(player).stopFlight();
-            helper.assertTrue(!player.getAbilities().flying,"Survival must still lose unauthorized custom flight");
+            helper.assertTrue(player.getAbilities().flying,"A human's survival flight from another source must survive the per-tick custom flight stop");
+            player.addTag(AveViltrumiteAccess.GRABBED_TAG);
+            flight(player).stopFlight();
+            helper.assertTrue(!player.getAbilities().flying,"A grabbed human must still lose flight while held");
+            player.removeTag(AveViltrumiteAccess.GRABBED_TAG);
         }
+        ServerPlayer owner=player(helper,OwnersWhipItem.OWNER_UUID);
+        ViltrumiteIntegration.changeRace(owner,true);
+        owner.getAbilities().flying=true;
+        flight(owner).stopFlight();
+        helper.assertTrue(!owner.getAbilities().flying && owner.getAbilities().mayfly,"The active owner's survival flight stays under ViltrumiteFlight control");
+        ViltrumiteIntegration.changeRace(owner,false);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "ave_grab")
+    public static void failsafeGrabReleaseRemovesGrantedFlight(GameTestHelper helper) {
+        ServerPlayer stranger=player(helper,UUID.randomUUID());
+        stranger.addTag(AveViltrumiteAccess.GRABBED_TAG);
+        helper.assertTrue(AveViltrumiteAccess.needsCoreTick(stranger),"A held human must still receive Core's grab tick");
+        // Core's failsafe drops the tag without releaseTarget when the holder vanishes (logout, dimension change).
+        stranger.removeTag(AveViltrumiteAccess.GRABBED_TAG);
+        stranger.getAbilities().mayfly=true;
+        stranger.getAbilities().flying=true;
+        helper.assertTrue(!AveViltrumiteAccess.needsCoreTick(stranger),"A released human must not run Core's tick");
+        helper.assertTrue(!stranger.getAbilities().mayfly && !stranger.getAbilities().flying
+                && !stranger.getTags().contains(AveViltrumiteAccess.RELEASE_TAG),"The grab's mayfly must not outlive the grab");
+        stranger.getAbilities().mayfly=true;
+        AveViltrumiteAccess.needsCoreTick(stranger);
+        helper.assertTrue(stranger.getAbilities().mayfly,"Unrelated mayfly must not be touched once the release was handled");
         helper.succeed();
     }
 
@@ -123,6 +152,7 @@ public final class AveViltrumiteGameTests {
         core(owner).setBlocking(true);
         core(owner).setBarraging(true);
         core(owner).setPunchTicks(20);
+        dev.baranhan.viltrumitecore.util.ChopImpactManager.CHOP_HIT_MEMORY.put(owner, new java.util.HashSet<>());
         flight(owner).setFlightState(FlightState.SONIC);
         var attribute = owner.getAttribute(Attributes.ATTACK_DAMAGE);
         var coreModifier = ResourceLocation.parse("viltrumitecore:base_strength");
@@ -136,6 +166,8 @@ public final class AveViltrumiteGameTests {
                 "Human mode must stop both custom and vanilla flying");
         helper.assertTrue(!attribute.hasModifier(coreModifier) && attribute.hasModifier(otherModifier),
                 "Only Viltrumite attribute bonuses may be removed");
+        helper.assertTrue(dev.baranhan.viltrumitecore.util.ChopImpactManager.CHOP_HIT_MEMORY.isEmpty(),
+                "Human mode must drop the owner's pending world effects");
         helper.succeed();
     }
 

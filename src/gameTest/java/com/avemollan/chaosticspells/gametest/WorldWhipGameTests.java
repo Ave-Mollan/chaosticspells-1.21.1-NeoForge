@@ -27,20 +27,24 @@ import org.joml.Vector3d;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class WorldWhipGameTests {
+    private static final int CRACK=WhipArmPose.CRACK,LENGTH=WhipArmPose.LENGTH;
+    private static boolean attacking(int tick){return tick>=0 && tick<LENGTH;}
     private static WhipArmPose.Frame frame(int tick) {
-        return WhipArmPose.frame(0,0,0,0,false,false,false,
-                WhipArmPose.sample(tick>=0 && tick<50,tick,30,-1,50,1,false));
+        return WhipArmPose.frame(0,0,0,0,false,false,false,WhipArmPose.sample(attacking(tick),tick,CRACK,-1,LENGTH,1,false));
+    }
+    private static void step(WorldWhipRope rope,int tick) {
+        for(int i=2;i<25;i++)rope.ground(i,0);
+        rope.step(frame(tick),attacking(tick) && tick>=WhipArmPose.RELEASE,attacking(tick),attacking(tick)?WhipArmPose.drive(tick,CRACK,-1,LENGTH,0):null);
     }
     @GameTest(template="empty")
     public static void worldGravitySettlesTheLooseTipOnTheFloor(GameTestHelper h) {
         var rope=new WorldWhipRope(frame(-1));double stretch=0;
         for(int tick=-10;tick<260;tick++) {
-            for(int i=2;i<25;i++)rope.ground(i,0);
-            rope.step(frame(tick),tick>=3,tick>=0 && tick<50);
+            step(rope,tick);
             for(int i=2;i<25;i++) {
                 var p=rope.point(i);
                 h.assertTrue(Double.isFinite(p.x()+p.y()+p.z()) && p.y()>=.0249,"World gravity/contact must remain finite and above the floor");
-                if(tick>=3)stretch=Math.max(stretch,Math.abs(Math.sqrt(p.subtract(rope.point(i-1)).lengthSquared())-WhipRope.length(i-1)));
+                if(tick>=WhipArmPose.RELEASE)stretch=Math.max(stretch,Math.abs(Math.sqrt(p.subtract(rope.point(i-1)).lengthSquared())-WhipRope.length(i-1)));
             }
         }
         h.assertTrue(Math.abs(rope.point(24).y()-.025)<.002,"The loose tip must lie on the floor, not hover in the air");
@@ -49,28 +53,46 @@ public final class WorldWhipGameTests {
         h.succeed();
     }
     @GameTest(template="empty")
-    public static void armCastsBackBeforeTheTipAcceleratesForward(GameTestHelper h) {
-        var rope=new WorldWhipRope(frame(-1));double back=0,forward=0,early=0,late=0;
-        for(int tick=-10;tick<50;tick++) {
-            for(int i=2;i<25;i++)rope.ground(i,0);
-            var old=rope.point(24);rope.step(frame(tick),tick>=3,tick>=0);var tip=rope.point(24);
-            if(tick>=0 && tick<11)back=Math.min(back,rope.point(0).z());
-            if(tick>=10 && tick<16)early=Math.max(early,tip.z()-old.z());
-            if(tick>=16 && tick<40)late=Math.max(late,tip.z()-old.z());
-            if(tick>=0)forward=Math.max(forward,tip.z());
+    public static void backswingThrowsTheLashBehindAndTheCrackSnapsItOutInFront(GameTestHelper h) {
+        var rope=new WorldWhipRope(frame(-1));double behind=0,high=0,speed=0;
+        for(int tick=-10;tick<LENGTH+20;tick++) {
+            var old=rope.point(24);step(rope,tick);var tip=rope.point(24);
+            if(tick>=0 && tick<CRACK-3) {behind=Math.min(behind,tip.z());high=Math.max(high,tip.y());}
+            if(tick>=CRACK-4 && tick<=CRACK)speed=Math.max(speed,Math.sqrt(tip.subtract(old).lengthSquared()));
+            if(tick==CRACK) {
+                h.assertTrue(tip.z()>4.5,"At the crack the tip must be far out in front of the player, z="+tip.z());
+                h.assertTrue(tip.z()>rope.point(12).z(),"At the crack the tip must lead the lash, not trail it");
+            }
+            if(tick==LENGTH+19)h.assertTrue(tip.z()>4,"After the crack the lash must fall in front, not recoil to the player; z="+tip.z());
         }
-        h.assertTrue(back<-.3 && forward>1,"The hand must draw the whip behind the player before the forward cast");
-        h.assertTrue(late>.5 && late>early*1.5,"The light tip must gain forward speed; early="+early+", late="+late);
-        h.assertTrue(WhipArmPose.sample(true,10,30,-1,50,1,false).x()<-Math.PI,"The player arm must visibly pass behind the shoulder");
+        h.assertTrue(behind<-2.5 && high>2.5,"The backswing must carry the lash up and behind the player; behind="+behind+", high="+high);
+        h.assertTrue(speed>2,"The tip must snap forward at the crack; speed="+speed);
+        h.assertTrue(WhipArmPose.sample(true,8,CRACK,-1,LENGTH,1,false).arm().x()<-Math.PI,"The player arm must visibly pass behind the shoulder");
+        h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void theArmOnlyRisesDuringAStroke(GameTestHelper h) {
+        h.assertTrue(WhipArmPose.sample(false,0,CRACK,-1,LENGTH,1,false)==WhipArmPose.IDLE && WhipArmPose.IDLE.arm().x()>-.5,
+                "Holding the whip must keep the vanilla held-item arm, not a raised one");
+        h.assertTrue(WhipArmPose.weight(false,5,LENGTH)==0 && WhipArmPose.weight(true,0,LENGTH)==0 && WhipArmPose.weight(true,LENGTH,LENGTH)==0
+                && WhipArmPose.weight(true,CRACK,LENGTH)==1,"The stroke must blend in from and back out to the vanilla arm");
+        // A queued backhand must not make the arm jump when it takes over from the first follow-through.
+        int peakB=CRACK+2+CRACK;double jump=0;var last=WhipArmPose.sample(true,0,CRACK,peakB,peakB+LENGTH-CRACK,1,false);
+        for(double t=.25;t<peakB+LENGTH-CRACK;t+=.25) {
+            var next=WhipArmPose.sample(true,t,CRACK,peakB,peakB+LENGTH-CRACK,1,false);
+            jump=Math.max(jump,Math.abs(next.arm().x()-last.arm().x()));last=next;
+        }
+        h.assertTrue(jump<.75,"Arm motion must stay continuous at quarter-tick sampling; largest step="+jump);
         h.succeed();
     }
     @GameTest(template="empty")
     public static void theGripMatchesMinecraftPalmInsteadOfTheForearm(GameTestHelper h) {
-        for(boolean left:new boolean[]{false,true}) for(double yaw:new double[]{0,67,174}) for(int tick:new int[]{-1,10,15,35}) {
-            var a=WhipArmPose.sample(tick>=0,tick,30,-1,50,1,left);
-            var f=WhipArmPose.frame(10,20,30,yaw,left,false,false,a);
+        for(boolean left:new boolean[]{false,true}) for(double yaw:new double[]{0,67,174}) for(int tick:new int[]{-1,4,8,12,20}) {
+            var pose=WhipArmPose.sample(tick>=0,tick,CRACK,-1,LENGTH,1,left);var a=pose.arm();var b=pose.body();
+            var f=WhipArmPose.frame(10,20,30,yaw,left,false,false,pose);
             // Independent reconstruction of the vanilla held-item pipeline and the fixed fist grip.
-            Matrix4d m=new Matrix4d().translate(10,20,30).rotateY(Math.toRadians(180-yaw)).scale(-.9375,-.9375,.9375)
+            Matrix4d m=new Matrix4d().translate(10,20,30).rotateY(Math.toRadians(180-yaw))
+                    .translate(0,.7,0).rotateZ(b.z()).rotateY(b.y()).rotateX(b.x()).translate(0,-.7,0).scale(-.9375,-.9375,.9375)
                     .translate(0,-1.501,0).translate((left?5:-5)/16.0,2.0/16,0).rotateZ(a.z()).rotateY(a.y()).rotateX(a.x())
                     .rotateX(-Math.PI/2).rotateY(Math.PI).translate((left?-1:1)/16.0,.125,-.625)
                     .translate(0,-.125+.01,0).translate(0,-.25,-.07).rotateY(Math.PI);

@@ -109,7 +109,9 @@ neoForge {
             if (whipVisualTest) {
                 jvmArguments.addAll '-Xmx1536m', '-Dfml.earlyWindowControl=false'
                 systemProperty 'whip.visual.role', providers.gradleProperty('whip_visual_role').getOrElse('host')
-                systemProperty 'whip.visual.output', layout.buildDirectory.dir('whip7-visual-session').get().asFile.absolutePath
+                systemProperty 'whip.visual.commands', providers.gradleProperty('ave_command_test').getOrElse('false')
+                systemProperty 'whip.visual.output', layout.buildDirectory.dir(
+                        providers.gradleProperty('ave_command_test').getOrElse('false') == 'true' ? 'ave-commands-session' : 'whip7-visual-session').get().asFile.absolutePath
             }
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
