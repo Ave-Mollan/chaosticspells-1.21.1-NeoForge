@@ -2,7 +2,6 @@
   "itemGroup.chaosticspells": "Example Mod Tab",
   "block.chaosticspells.example_block": "Example Block",
   "item.chaosticspells.example_item": "Example Item",
-
   "school.chaosticspells.chaos": "Chaos",
   "spell.chaosticspells.chaotic_arrow": "Chaotic Arrow",
   "spell.chaosticspells.magic_arrow": "Magic Arrow",
@@ -19,15 +18,12 @@
   "item.chaosticspells.chaos_transformation_amulet": "Chaos Transformation Amulet",
   "item.chaosticspells.chaos_transformation_amulet.desc": "Use with an upgrade orb in your off-hand to bind a school. Right-click to recharge with mana (50 per charge).",
   "item.chaosticspells.chaos_transformation_amulet.bound": "Bound to %s",
-
   "item.chaosticspells.chaos_rune": "Chaos Rune",
   "item.chaosticspells.chaos_upgrade_orb": "Chaos Upgrade Orb",
-
   "item.chaosticspells.missionary_hat_helmet": "Missionary Hat",
   "item.chaosticspells.missionary_hat_helmet.shift": "Hold Shift for description",
   "item.chaosticspells.missionary_hat_helmet.description_0": "Summons a controlled baby skeleton when you are attacked by a monster.",
   "item.chaosticspells.missionary_hat_helmet.description_1": "When triggered, casts magic depletion on you.",
-
   "item.chaosticspells.magic_nightmare_helmet": "§6Nightmare Mask",
   "item.chaosticspells.magic_nightmare_chestplate": "§6Nightmare Robe",
   "item.chaosticspells.magic_nightmare_leggings": "§6Nightmare Pants",
@@ -35,7 +31,6 @@
   "item.chaosticspells.magic_nightmare_helmet.bonus": "§8You move faster in the dark",
   "item.chaosticspells.magic_nightmare_armor.set_bonus": "§8Full Set Bonus: Resistance II when affected by Magic Depletion",
   "item.chaosticspells.magic_nightmare_armor.shift": "§8Hold Shift for description",
-
   "item.chaosticspells.magic_dark_metal_helmet": "§6Magic Dark Metal Helmet",
   "item.chaosticspells.crowned_magic_dark_metal_helmet": "§5Crowned Magic Dark Metal Helmet",
   "item.chaosticspells.crowned_magic_dark_metal_helmet.description_0": "§8A powerful helmet combining the mystical crown of the Tarnished with the durability of Dark Metal",
@@ -48,7 +43,6 @@
   "item.chaosticspells.magic_dark_metal_armor.set_bonus_1": "§8You go into a rampage when your health is low",
   "item.chaosticspells.magic_dark_metal_armor.set_bonus_2": "§8Wither protection",
   "item.chaosticspells.magic_dark_metal_armor.shift": "§8Hold Shift for description",
-
   "chaosticspells.message.obsession_target_failure": "Aim at your own magic summon",
   "effect.chaosticspells.death_pact": "Death Pact",
   "attribute.chaosticspells.chaos_spell_power": "Chaos Spell Power",
@@ -56,12 +50,25 @@
   "death.attack.chaos_magic": "%1$s was unraveled by %2$s's chaos magic",
   "chaosticspells.compat.born_in_chaos.tooltip.irons_mana_regen_penalty": "−%s%% Mana Regeneration (Iron's Spellbooks)",
   "chaosticspells.compat.born_in_chaos.tooltip.irons_mana_regen_bonus": "+%s%% Mana Regeneration",
-
   "chaosticspells.configuration.title": "ChaosticSpells Configs",
   "chaosticspells.configuration.section.chaosticspells.common.toml": "ChaosticSpells Configs",
   "chaosticspells.configuration.section.chaosticspells.common.toml.title": "ChaosticSpells Configs",
   "chaosticspells.configuration.items": "Item List",
   "chaosticspells.configuration.logDirtBlock": "Log Dirt Block",
   "chaosticspells.configuration.magicNumberIntroduction": "Magic Number Text",
-  "chaosticspells.configuration.magicNumber": "Magic Number"
+  "chaosticspells.configuration.magicNumber": "Magic Number",
+  "item.chaosticspells.owners_whip": "AveMollan's Whip",
+  "tooltip.chaosticspells.owners_whip.owner": "Bound to AveMollan",
+  "tooltip.chaosticspells.owners_whip.controls": "Hold Attack and release. Press again during the first cast for a follow-up.",
+  "tooltip.chaosticspells.owners_whip.damage": "5–20 armor-piercing damage per lash. 160-degree arc, up to 8 blocks.",
+  "tooltip.chaosticspells.owners_whip.retained": "Returns after the owner respawns. Command only.",
+  "message.chaosticspells.whip_locked": "This whip answers only to AveMollan.",
+  "message.chaosticspells.whip_charge": "Whip: %s%% • Damage: %s",
+  "subtitles.chaosticspells.whip_crack": "Whip cracks",
+  "subtitles.chaosticspells.whip_hit": "Whip strikes",
+  "death.attack.owners_whip": "%1$s was lashed by %2$s",
+  "death.attack.owners_whip.item": "%1$s was lashed by %2$s using %3$s",
+  "message.chaosticspells.ave_race_viltrumite": "Race: Viltrumite. Powers enabled.",
+  "message.chaosticspells.ave_race_human": "Race: Human. Powers disabled.",
+  "subtitles.chaosticspells.whip_double": "Whip cracks twice"
 }

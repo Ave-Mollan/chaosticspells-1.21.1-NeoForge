@@ -40,6 +40,13 @@ configurations.gameTestImplementation.extendsFrom(configurations.implementation)
 configurations.gameTestRuntimeOnly.extendsFrom(configurations.runtimeOnly, configurations.localRuntime)
 
 def bornInChaosJar = file(providers.gradleProperty('born_in_chaos_jar').get())
+def viltrumiteJars = files('viltrumitecore-1.11.1-neoforge-1.21.1.jar', 'viltrumiteflight-1.21.1-neoforge-1.6.8.jar')
+def withViltrumite = providers.gradleProperty('with_viltrumite').map { it.toBoolean() }.getOrElse(false)
+if (withViltrumite) {
+    sourceSets.gameTest.java.srcDir('src/viltrumiteTest/java')
+}
+def whipVisualTest = providers.gradleProperty('whip_visual_test').map { it.toBoolean() }.getOrElse(false)
+if (whipVisualTest) sourceSets.main.java.srcDir('src/visualTest/java')
 
 repositories {
     maven { url = "https://maven.theillusivec4.top" }
@@ -87,6 +94,23 @@ neoForge {
     runs {
         client {
             client()
+            // Isolated manual client smoke test; never changes the user's launcher instance.
+            if (providers.gradleProperty('ave_client_uuid').isPresent()) {
+                gameDirectory = layout.buildDirectory.dir(providers.gradleProperty('ave_client_dir').getOrElse('ave-client-smoke'))
+                programArguments.addAll '--username', providers.gradleProperty('ave_client_name').getOrElse('AveSmoke'),
+                        '--uuid', providers.gradleProperty('ave_client_uuid').get(), '--width', '1100', '--height', '720'
+                if (providers.gradleProperty('ave_client_world').isPresent()) {
+                    programArguments.addAll '--quickPlaySingleplayer', providers.gradleProperty('ave_client_world').get()
+                }
+                if (providers.gradleProperty('ave_client_server').isPresent()) {
+                    programArguments.addAll '--quickPlayMultiplayer', providers.gradleProperty('ave_client_server').get()
+                }
+            }
+            if (whipVisualTest) {
+                jvmArguments.addAll '-Xmx1536m', '-Dfml.earlyWindowControl=false'
+                systemProperty 'whip.visual.role', providers.gradleProperty('whip_visual_role').getOrElse('host')
+                systemProperty 'whip.visual.output', layout.buildDirectory.dir('whip7-visual-session').get().asFile.absolutePath
+            }
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
@@ -150,6 +174,12 @@ configurations {
 }
 
 dependencies {
+    // SDK only: not bundled and never a required runtime dependency of ChaosticSpells.
+    compileOnly viltrumiteJars
+    if (withViltrumite) {
+        localRuntime viltrumiteJars
+        gameTestImplementation viltrumiteJars
+    }
     // MixinExtras (@ModifyExpressionValue) — resolves at compile-time; NeoForge bundles runtime shim
     implementation 'io.github.llamalad7:mixinextras-common:0.5.1'
 

@@ -1,0 +1,56 @@
+{
+  "whip_strike_1": {
+    "subtitle": "subtitles.chaosticspells.whip_crack",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/strike_1",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "whip_strike_2": {
+    "subtitle": "subtitles.chaosticspells.whip_crack",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/strike_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "whip_strike_3": {
+    "subtitle": "subtitles.chaosticspells.whip_crack",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/strike_3",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "whip_strike_4": {
+    "subtitle": "subtitles.chaosticspells.whip_crack",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/strike_4",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "whip_double": {
+    "subtitle": "subtitles.chaosticspells.whip_double",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/double",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "whip_follow_up": {
+    "subtitle": "subtitles.chaosticspells.whip_crack",
+    "sounds": [
+      {
+        "name": "chaosticspells:whip/follow_up",
+        "attenuation_distance": 24
+      }
+    ]
+  }
+}

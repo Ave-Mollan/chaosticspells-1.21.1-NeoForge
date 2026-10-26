@@ -15,15 +15,12 @@
   "item.chaosticspells.chaos_transformation_amulet": "Амулет трансформации силы Хаоса",
   "item.chaosticspells.chaos_transformation_amulet.desc": "Используйте со сферой улучшения во второй руке, чтобы привязать школу. ПКМ — перезарядка за ману (50 за заряд).",
   "item.chaosticspells.chaos_transformation_amulet.bound": "Привязан к: %s",
-
   "item.chaosticspells.chaos_rune": "Руна хаоса",
   "item.chaosticspells.chaos_upgrade_orb": "Сфера улучшения хаоса",
-
   "item.chaosticspells.missionary_hat_helmet": "Шляпа миссионера",
   "item.chaosticspells.missionary_hat_helmet.shift": "Зажмите Shift, чтобы отобразить описание",
   "item.chaosticspells.missionary_hat_helmet.description_0": "Призывает подконтрольного малыша скелета, когда вас атакует монстр.",
   "item.chaosticspells.missionary_hat_helmet.description_1": "При срабатывании накладывает на вас магическое истощение.",
-
   "item.chaosticspells.magic_nightmare_helmet": "§6Маска кошмара",
   "item.chaosticspells.magic_nightmare_chestplate": "§6Роба кошмара",
   "item.chaosticspells.magic_nightmare_leggings": "§6Штаны кошмара",
@@ -31,7 +28,6 @@
   "item.chaosticspells.magic_nightmare_helmet.bonus": "§8Вы двигаетесь быстрее в темноте",
   "item.chaosticspells.magic_nightmare_armor.set_bonus": "§8Бонус полного сета: Сопротивление II при эффекте магического истощения",
   "item.chaosticspells.magic_nightmare_armor.shift": "§8Зажмите Shift для отображения описания",
-
   "item.chaosticspells.magic_dark_metal_helmet": "§6Магический Шлем из темного металла",
   "item.chaosticspells.crowned_magic_dark_metal_helmet": "§5Коронованный магический шлем из темного металла",
   "item.chaosticspells.crowned_magic_dark_metal_helmet.description_0": "§8Мощный шлем, объединяющий мистическую корону Потускневших с прочностью темного металла",
@@ -44,12 +40,25 @@
   "item.chaosticspells.magic_dark_metal_armor.set_bonus_1": "§8Вы впадаете в буйство при низком запасе здоровья",
   "item.chaosticspells.magic_dark_metal_armor.set_bonus_2": "§8Защита от иссушения",
   "item.chaosticspells.magic_dark_metal_armor.shift": "§8Зажмите Shift для отображения описания",
-
   "chaosticspells.message.obsession_target_failure": "Наведите прицел на своё магическое призвание",
   "effect.chaosticspells.death_pact": "Пакт смерти",
   "attribute.chaosticspells.chaos_spell_power": "Сила магии хаоса",
   "attribute.chaosticspells.chaos_magic_resist": "Сопротивление магии хаоса",
   "death.attack.chaos_magic": "%1$s развалилась от хаотической магии %2$s",
   "chaosticspells.compat.born_in_chaos.tooltip.irons_mana_regen_penalty": "−%s%% Восстановление маны",
-  "chaosticspells.compat.born_in_chaos.tooltip.irons_mana_regen_bonus": "+%s%% Восстановление маны"
+  "chaosticspells.compat.born_in_chaos.tooltip.irons_mana_regen_bonus": "+%s%% Восстановление маны",
+  "item.chaosticspells.owners_whip": "Кнут AveMollan",
+  "tooltip.chaosticspells.owners_whip.owner": "Подчиняется только AveMollan",
+  "tooltip.chaosticspells.owners_whip.controls": "Зажми атаку и отпусти. Нажми ещё раз во время первого взмаха для второго.",
+  "tooltip.chaosticspells.owners_whip.damage": "5–20 урона сквозь броню за взмах. Дуга 160°, дальность до 8 блоков.",
+  "tooltip.chaosticspells.owners_whip.retained": "Возвращается после возрождения владельца. Только /give.",
+  "message.chaosticspells.whip_locked": "Этот кнут подчиняется только AveMollan.",
+  "message.chaosticspells.whip_charge": "Кнут: %s%% • Урон: %s",
+  "subtitles.chaosticspells.whip_crack": "Щелчок кнута",
+  "subtitles.chaosticspells.whip_hit": "Удар кнутом",
+  "death.attack.owners_whip": "%1$s получил удар кнутом от %2$s",
+  "death.attack.owners_whip.item": "%1$s получил удар от %2$s с помощью %3$s",
+  "message.chaosticspells.ave_race_viltrumite": "Раса: вилтрумит. Способности включены.",
+  "message.chaosticspells.ave_race_human": "Раса: человек. Способности выключены.",
+  "subtitles.chaosticspells.whip_double": "Двойной щелчок кнута"
 }

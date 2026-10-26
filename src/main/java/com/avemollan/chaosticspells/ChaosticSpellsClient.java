@@ -98,8 +98,18 @@ public class ChaosticSpellsClient {
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
+        if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
+            event.enqueueWork(com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteClientPolicy::install);
+        }
         ChaosticSpells.LOGGER.info("ChaoticSpells client setup");
         ChaosticSpells.LOGGER.debug("User: {}", Minecraft.getInstance().getUser().getName());
+    }
+
+    @SubscribeEvent
+    static void filterViltrumiteCreativeItems(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event) {
+        if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
+            com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteClientPolicy.creativeTab(event);
+        }
     }
 
     @SubscribeEvent
@@ -109,6 +119,7 @@ public class ChaosticSpellsClient {
 
     @SubscribeEvent
     static void registerClientExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(new com.avemollan.chaosticspells.client.OwnersWhipClientExtensions(), ChaosticItemRegistry.OWNERS_WHIP.get());
         event.registerItem(new BonescallerStaffClientExtensions(), ChaosticItemRegistry.BONESCALLER_STAFF.get());
         event.registerItem(new ChaosStaffClientExtensions(), ChaosticItemRegistry.CHAOS_STAFF.get());
         event.registerItem(MissionaryHatClientExtensions.INSTANCE, ChaosticItemRegistry.MISSIONARY_HAT_HELMET.get());

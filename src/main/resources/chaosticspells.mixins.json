@@ -8,6 +8,11 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "compat.viltrumite.CorePlayerAccessMixin",
+    "compat.viltrumite.FlightPlayerAccessMixin",
+    "compat.viltrumite.ServerPayloadAccessMixin",
+    "compat.viltrumite.AutomaticWorldEventsMixin",
+    "compat.viltrumite.BloodEventsAccessMixin",
     "AbstractSpellMixin",
     "MagicManagerRegenBornInChaosManaMixin",
     "compat.bicnightmare.BcNightmareCompatMixin_Accessor_Entity_ItemStack",
@@ -21,6 +26,12 @@
     "compat.bicdarkmetal.BcDarkMetalArmorPercentThresholdMixin"
   ],
   "client": [
+    "compat.viltrumite.CreativeTabsAccess",
+    "compat.viltrumite.ClientKeyBindingsMixin",
+    "compat.viltrumite.ClientKeyConflictsMixin",
+    "compat.viltrumite.ClientHandAccessMixin",
+    "compat.viltrumite.ClientAbilityInputMixin",
+    "compat.viltrumite.ClientFlightInputMixin",
     "ClientEntityMagicSummonGlowColorMixin",
     "ClientMinecraftMagicSummonGlowMixin"
   ]

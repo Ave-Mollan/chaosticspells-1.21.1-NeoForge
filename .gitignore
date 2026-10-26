@@ -38,3 +38,11 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Python asset tools ###
+__pycache__/
+*.py[cod]
+
+### Local optional mod SDKs ###
+/viltrumitecore-*.jar
+/viltrumiteflight-*.jar

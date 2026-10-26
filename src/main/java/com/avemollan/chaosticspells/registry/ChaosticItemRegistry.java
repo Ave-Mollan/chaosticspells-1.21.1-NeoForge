@@ -31,6 +31,10 @@ public final class ChaosticItemRegistry {
 
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, ChaosticSpells.MODID);
 
+    // Intentionally absent from creative tabs, recipes and loot tables. Obtain only through /give.
+    public static final DeferredHolder<Item, com.avemollan.chaosticspells.item.OwnersWhipItem> OWNERS_WHIP =
+            ITEMS.register("owners_whip", com.avemollan.chaosticspells.item.OwnersWhipItem::new);
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
         eventBus.addListener(ChaosticCreativeTabs::onBuildCreativeModeTab);

@@ -37,15 +37,24 @@ public class ChaosticSpells {
         ChaosticSpellRegistry.register(modEventBus);
         ChaosticEntityRegistry.register(modEventBus);
         ChaosticItemRegistry.register(modEventBus);
+        com.avemollan.chaosticspells.registry.WhipSounds.register(modEventBus);
+        modEventBus.addListener(com.avemollan.chaosticspells.network.WhipActionPayload::register);
+        modEventBus.addListener(com.avemollan.chaosticspells.network.WhipMotionPayload::register);
 
         modEventBus.addListener((FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
             GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.BONESCALLER_STAFF.get());
             GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.CHAOS_STAFF.get());
+            GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.OWNERS_WHIP.get());
+            if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
+                com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteIntegration.install();
+            }
         }));
 
         NeoForge.EVENT_BUS.register(DeathPactEventHandler.class);
         NeoForge.EVENT_BUS.register(ChaosTransformationAmuletHandler.class);
         NeoForge.EVENT_BUS.register(MissionaryHatEventHandler.class);
+        NeoForge.EVENT_BUS.register(com.avemollan.chaosticspells.events.WhipCombat.class);
+        NeoForge.EVENT_BUS.register(com.avemollan.chaosticspells.events.WhipRetention.class);
 
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, Config.SPEC);
     }
