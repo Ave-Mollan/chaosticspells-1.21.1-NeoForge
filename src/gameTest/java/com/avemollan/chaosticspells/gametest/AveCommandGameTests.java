@@ -1,6 +1,7 @@
 package com.avemollan.chaosticspells.gametest;
 
 import com.avemollan.chaosticspells.commands.AveCommands;
+import com.avemollan.chaosticspells.commands.AveInventoryMenu;
 import com.avemollan.chaosticspells.item.OwnersWhipItem;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
@@ -9,6 +10,7 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -18,14 +20,19 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -34,7 +41,7 @@ import net.neoforged.neoforge.server.command.CommandHelper;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class AveCommandGameTests {
-    private static final List<String> ALIASES = List.of("give", "effect", "damage", "kill", "locate", "tp");
+    private static final List<String> ALIASES = List.of("give", "effect", "damage", "kill", "locate", "tp", "gamemode", "summon", "attribute");
 
     @GameTest(template = "empty", batch = "ave_commands_tree")
     public static void onlyTheOwnerReceivesThePrivilegedCommandTree(GameTestHelper h) {
@@ -50,10 +57,11 @@ public final class AveCommandGameTests {
         var ownTree = visibleTree(h, owner);
         h.assertTrue(ownTree.getChild("give") == null, "Owner must not receive unprefixed operator commands");
         for (String name : ALIASES) h.assertTrue(ownTree.getChild("ave").getChild(name) != null, "Missing visible alias: " + name);
+        h.assertTrue(ownTree.getChild("ave").getChild("inventory").getChild("target") != null, "Missing visible /ave inventory");
         h.assertTrue(ownTree.getChild("ave").getChild("tp").getChild("location") != null,
                 "/ave tp must expose its real arguments to non-OP clients without the hidden /teleport root");
-        for (String name : List.of("op", "execute", "gamemode", "stop")) {
-            h.assertTrue(ownTree.getChild("ave").getChild(name) == null, "Only the six requested commands may be elevated");
+        for (String name : List.of("op", "execute", "stop")) {
+            h.assertTrue(ownTree.getChild("ave").getChild(name) == null, "Only the requested commands may be elevated");
         }
         h.assertTrue(visibleTree(h, admin).getChild("ave") == null, "The tree sent to other operators must omit /ave entirely");
         h.succeed();
@@ -66,7 +74,7 @@ public final class AveCommandGameTests {
         var console = h.getLevel().getServer().createCommandSourceStack();
         for (var forbidden : List.of(admin, admin.withEntity(owner), console, console.withEntity(owner))) {
             h.assertTrue(!AveCommands.isOwner(forbidden), "An impersonated entity UUID must not replace the real command sender");
-            for (String name : ALIASES) {
+            for (String name : Stream.concat(ALIASES.stream(), Stream.of("inventory @s")).toList()) {
                 boolean denied = false;
                 try { commands(h).execute("ave " + name, forbidden); }
                 catch (CommandSyntaxException expected) { denied = true; }
@@ -172,6 +180,115 @@ public final class AveCommandGameTests {
             var suggestions = commands(h).getCompletionSuggestions(commands(h).parse(query[0], source)).join();
             h.assertTrue(suggestions.getList().stream().anyMatch(s -> s.getText().equals(query[1])), "Missing native suggestion: " + query[1]);
         }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "ave_commands_gamemode")
+    public static void gamemodeChangesSelfAndTargetsWithoutOp(GameTestHelper h) throws Exception {
+        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var target = player(h, UUID.randomUUID());
+        var source = owner.createCommandSourceStack().withPermission(0);
+        for (String mode : List.of("creative", "spectator", "adventure", "survival")) {
+            commands(h).execute("ave gamemode " + mode, source);
+            h.assertTrue(owner.gameMode.getGameModeForPlayer().getName().equals(mode), "Wrong own gamemode: " + mode);
+        }
+        target.addTag("ave_gamemode_test");
+        h.getLevel().addNewPlayer(target);
+        try {
+            h.assertTrue(commands(h).execute("ave gamemode creative @a[tag=ave_gamemode_test,distance=..16]", source) == 1,
+                    "Player selector must work without OP");
+            h.assertTrue(target.gameMode.getGameModeForPlayer() == GameType.CREATIVE, "Target must enter creative mode");
+        } finally {
+            h.getLevel().removePlayerImmediately(target, Entity.RemovalReason.DISCARDED);
+        }
+        h.assertTrue(!source.hasPermission(2), "Gamemode must not grant persistent permissions");
+        var suggestions = commands(h).getCompletionSuggestions(commands(h).parse("ave gamemode cre", source)).join();
+        h.assertTrue(suggestions.getList().stream().anyMatch(s -> s.getText().equals("creative")), "Gamemode suggestions must work");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "ave_commands_summon")
+    public static void summonAndAttributeWorkWithoutOp(GameTestHelper h) throws Exception {
+        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var source = owner.createCommandSourceStack().withPermission(0);
+        var at = h.absolutePos(new BlockPos(2, 1, 2));
+        commands(h).execute("ave summon minecraft:pig " + at.getX() + " " + at.getY() + " " + at.getZ()
+                + " {Tags:[\"ave_summon_test\"]}", source);
+        var summoned = h.getLevel().getEntities(EntityType.PIG, pig -> pig.getTags().contains("ave_summon_test"));
+        h.assertTrue(summoned.size() == 1, "Summon must create one entity with its NBT applied");
+        var pig = summoned.get(0);
+        String target = "@e[tag=ave_summon_test,limit=1]";
+        var speedId = ResourceLocation.fromNamespaceAndPath("chaosticspells", "ave_test");
+        commands(h).execute("ave attribute " + target + " minecraft:generic.max_health base set 40", source);
+        h.assertTrue(pig.getAttributeBaseValue(Attributes.MAX_HEALTH) == 40, "Attribute base set must change the target");
+        commands(h).execute("ave attribute " + target + " minecraft:generic.movement_speed modifier add " + speedId
+                + " 0.5 add_multiplied_base", source);
+        h.assertTrue(pig.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedId), "Attribute modifier add must work");
+        h.assertTrue(commands(h).execute("ave attribute " + target + " minecraft:generic.max_health base get", source) == 40,
+                "Attribute queries must return the vanilla value");
+        commands(h).execute("ave attribute " + target + " minecraft:generic.movement_speed modifier remove " + speedId, source);
+        h.assertTrue(!pig.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedId), "Attribute modifier remove must work");
+        h.assertTrue(!source.hasPermission(2), "Summon and attribute must not grant persistent permissions");
+        for (var query : List.of(new String[]{"ave summon minecraft:zomb", "minecraft:zombie"},
+                new String[]{"ave attribute @s minecraft:generic.max_h", "minecraft:generic.max_health"})) {
+            var suggestions = commands(h).getCompletionSuggestions(commands(h).parse(query[0], source)).join();
+            h.assertTrue(suggestions.getList().stream().anyMatch(s -> s.getText().equals(query[1])), "Missing native suggestion: " + query[1]);
+        }
+        pig.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "ave_commands_invsee")
+    public static void inventoryOpensAnotherPlayersLiveInventory(GameTestHelper h) throws Exception {
+        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var target = player(h, UUID.randomUUID());
+        var source = owner.createCommandSourceStack().withPermission(0);
+        boolean denied = false;
+        try { commands(h).execute("ave inventory @s", source); }
+        catch (CommandSyntaxException expected) { denied = true; }
+        h.assertTrue(denied && !(owner.containerMenu instanceof AveInventoryMenu), "Own inventory must be rejected");
+
+        var inventory = target.getInventory();
+        inventory.setItem(0, new ItemStack(Items.DIAMOND, 5));
+        inventory.setItem(20, new ItemStack(Items.STICK, 3));
+        inventory.armor.set(3, new ItemStack(Items.IRON_HELMET));
+        inventory.offhand.set(0, new ItemStack(Items.SHIELD));
+        target.addTag("ave_invsee_test");
+        h.getLevel().addNewPlayer(target);
+        try {
+            commands(h).execute("ave inventory @a[tag=ave_invsee_test,distance=..16,limit=1]", source);
+            h.assertTrue(owner.containerMenu instanceof AveInventoryMenu, "The command must open the inventory view");
+            var menu = owner.containerMenu;
+            h.assertTrue(menu.slots.size() == inventory.getContainerSize() + 36, "Every target slot plus the viewer's 36 must be shown");
+            var head = menu.getSlot(0);
+            var offhand = menu.getSlot(4);
+            var hotbar = menu.getSlot(32);
+            h.assertTrue(head.getContainerSlot() == 39 && head.getItem().is(Items.IRON_HELMET), "First slot must be the target's helmet");
+            h.assertTrue(offhand.getContainerSlot() == 40 && offhand.getItem().is(Items.SHIELD), "Offhand must follow the armor");
+            h.assertTrue(hotbar.getContainerSlot() == 0 && hotbar.getItem().is(Items.DIAMOND), "Hotbar must be the last target row");
+            h.assertTrue(menu.getSlot(5 + 11).getItem().is(Items.STICK), "Main inventory must be shown in vanilla order");
+            h.assertTrue(!head.mayPlace(new ItemStack(Items.DIRT)) && head.mayPlace(new ItemStack(Items.DIAMOND_HELMET))
+                    && !menu.getSlot(1).mayPlace(new ItemStack(Items.DIAMOND_HELMET)),
+                    "Armor slots must keep the target's own placement rules");
+
+            menu.quickMoveStack(owner, 32);
+            h.assertTrue(inventory.getItem(0).isEmpty() && owner.getInventory().countItem(Items.DIAMOND) == 5,
+                    "Shift-click must take items out of the target's inventory");
+            int viewerSlot = menu.slots.size() - 9 + owner.getInventory().findSlotMatchingItem(new ItemStack(Items.DIAMOND));
+            menu.quickMoveStack(owner, viewerSlot);
+            h.assertTrue(inventory.countItem(Items.DIAMOND) == 5 && owner.getInventory().countItem(Items.DIAMOND) == 0,
+                    "Shift-click must put items back into the target's storage");
+            menu.clicked(5 + 11, 0, ClickType.PICKUP, owner);
+            menu.clicked(7, 0, ClickType.PICKUP, owner);
+            h.assertTrue(inventory.getItem(11).is(Items.STICK) && inventory.getItem(20).isEmpty(),
+                    "Items must be movable inside the target's inventory");
+            inventory.setItem(1, new ItemStack(Items.APPLE));
+            h.assertTrue(menu.getSlot(33).getItem().is(Items.APPLE), "The view must stay live");
+            h.assertTrue(menu.stillValid(owner), "The view must stay open while the target is online");
+        } finally {
+            h.getLevel().removePlayerImmediately(target, Entity.RemovalReason.DISCARDED);
+        }
+        h.assertTrue(!owner.containerMenu.stillValid(owner), "The view must close once the target leaves");
         h.succeed();
     }
 

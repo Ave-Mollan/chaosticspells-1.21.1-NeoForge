@@ -38,6 +38,7 @@ public class ChaosticSpells {
         ChaosticEntityRegistry.register(modEventBus);
         ChaosticItemRegistry.register(modEventBus);
         com.avemollan.chaosticspells.registry.WhipSounds.register(modEventBus);
+        com.avemollan.chaosticspells.registry.ChaosticMenuRegistry.register(modEventBus);
         modEventBus.addListener(com.avemollan.chaosticspells.network.WhipActionPayload::register);
         modEventBus.addListener(com.avemollan.chaosticspells.network.WhipMotionPayload::register);
 

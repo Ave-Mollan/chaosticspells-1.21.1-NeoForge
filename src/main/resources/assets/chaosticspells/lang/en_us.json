@@ -70,5 +70,7 @@
   "death.attack.owners_whip.item": "%1$s was lashed by %2$s using %3$s",
   "message.chaosticspells.ave_race_viltrumite": "Race: Viltrumite. Powers enabled.",
   "message.chaosticspells.ave_race_human": "Race: Human. Powers disabled.",
+  "container.chaosticspells.ave_inventory": "Inventory: %s",
+  "commands.chaosticspells.ave_inventory.self": "You cannot open your own inventory this way.",
   "subtitles.chaosticspells.whip_double": "Whip cracks twice"
 }

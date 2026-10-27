@@ -60,5 +60,7 @@
   "death.attack.owners_whip.item": "%1$s получил удар от %2$s с помощью %3$s",
   "message.chaosticspells.ave_race_viltrumite": "Раса: вилтрумит. Способности включены.",
   "message.chaosticspells.ave_race_human": "Раса: человек. Способности выключены.",
+  "container.chaosticspells.ave_inventory": "Инвентарь: %s",
+  "commands.chaosticspells.ave_inventory.self": "Нельзя открыть собственный инвентарь этой командой.",
   "subtitles.chaosticspells.whip_double": "Двойной щелчок кнута"
 }

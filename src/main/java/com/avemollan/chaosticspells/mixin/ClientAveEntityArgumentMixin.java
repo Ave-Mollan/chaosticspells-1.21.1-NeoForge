@@ -23,7 +23,7 @@ public abstract class ClientAveEntityArgumentMixin {
         if (!(source instanceof ClientSuggestionProvider) || player == null || !OwnersWhipItem.isOwner(player)) return;
         String prefix = reader.getString().substring(0, reader.getCursor());
         if (prefix.startsWith("/")) prefix = prefix.substring(1);
-        for (String command : List.of("give", "effect", "damage", "kill", "locate", "tp")) {
+        for (String command : List.of("give", "effect", "damage", "kill", "locate", "tp", "gamemode", "attribute", "inventory")) {
             if (prefix.startsWith("ave " + command + " ")) {
                 result.setReturnValue(((EntityArgument) (Object) this).parse(reader));
                 return;

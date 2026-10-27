@@ -6,7 +6,7 @@
 
 ## Установка
 
-Файл: `build/libs/chaosticspells-1.1.2-whip.9.jar`.
+Файл: `build/libs/chaosticspells-1.1.2-whip.11.jar`.
 
 Замените обычный JAR ChaosticSpells на эту версию **на сервере и у всех игроков**.
 У обеих версий одинаковый mod ID: одновременно устанавливать их нельзя.
@@ -61,12 +61,11 @@ AveMollan. Возврат в человека останавливает акт�
 Ограничение касается игрового поведения и интерфейса. Установленные JAR остаются видны в списке
 модов NeoForge и на диске; клиентам нужны сами моды для совместимости с сервером.
 
-## Команды AveMollan без OP
+## AveMollan commands without OP
 
-Для UUID владельца доступны шесть команд с префиксом `/ave`. Они работают без OP,
-в человеческом режиме и без установленных Viltrumite-модов. После названия команды
-используются обычные аргументы Minecraft, включая селекторы, относительные координаты
-и подсказки автодополнения:
+Ten commands with the `/ave` prefix are available to the owner UUID. They work without OP,
+in human mode and without the Viltrumite mods. The copied commands keep vanilla Minecraft
+arguments, selectors, relative coordinates and completion:
 
 ```mcfunction
 /ave give @s chaosticspells:owners_whip 1
@@ -75,15 +74,41 @@ AveMollan. Возврат в человека останавливает акт�
 /ave kill @e[type=minecraft:zombie,limit=1,sort=nearest]
 /ave locate structure minecraft:village_plains
 /ave tp @s 100 70 100
+/ave gamemode creative
+/ave gamemode survival <player>
+/ave summon minecraft:wolf ~ ~ ~ {CustomName:'"Rex"'}
+/ave attribute @s minecraft:generic.max_health base set 40
+/ave inventory <player>
 ```
 
-`effect clear`, поиск биомов/точек интереса и остальные варианты синтаксиса этих шести
-команд также сохраняются. `/ave kill` без цели действует на самого владельца.
-Другие UUID, включая операторов с совпадающим именем, не получают `/ave` в дереве команд
-и не могут вызвать её вручную. Проверяется настоящий отправитель, поэтому `/execute as`
-от администратора или консоли не подменяет владельца. Права уровня 2 используются только
-при выполнении этих шести подкоманд; OP и постоянные права игрока не меняются.
-Обычные `/give`, `/effect`, `/damage`, `/kill`, `/locate`, `/tp` сохраняют свои правила доступа.
+`effect clear`, biome/POI location and every other vanilla form of these commands stay
+available, including NBT for `summon` and the `base`/`modifier`/`get` forms of `attribute`.
+`/ave kill` without a target kills the owner; `/ave gamemode <mode>` without a target changes
+the owner's own mode. Feedback messages are the vanilla ones.
+
+### /ave inventory
+
+`/ave inventory <player>` opens a live view of another online player's inventory:
+armor (head to feet) and the offhand in the top row, then the main inventory and the hotbar,
+and the owner's own inventory below. Items can be taken, put in and moved inside the target's
+inventory, including shift-click; the target sees changes immediately.
+
+- Slots are built from the target's actual `Inventory` size, so inventories enlarged by other
+  mods (extra compartments after the offhand) appear as additional rows.
+- Placement rules, stack limits and empty-slot icons are taken from the matching slots of the
+  target's own inventory screen, so mods that restrict a slot keep working (armor accepts only
+  matching armor; Curse of Binding cannot be removed in survival, as in vanilla).
+- Curios and other separate accessory inventories are not part of the player's `Inventory`
+  and are not shown.
+- The view closes when the target logs out, respawns or is removed. Opening your own inventory
+  is rejected.
+
+Other UUIDs, including operators with the same name, do not receive `/ave` in the command tree
+and cannot call it manually. The real sender is checked, so administrator or console
+`/execute as` cannot impersonate the owner. Permission level 2 is scoped to parsing, suggestions
+and execution of these subcommands; OP status and the player's persistent permissions do not
+change. Ordinary `/give`, `/effect`, `/damage`, `/kill`, `/locate`, `/tp`, `/gamemode`,
+`/summon` and `/attribute` keep their own access rules.
 
 ## Получение и управление
 
@@ -203,7 +228,7 @@ AveMollan. Возврат в человека останавливает акт�
 .\gradlew.bat runGameTestServer -Pwith_viltrumite=true
 ```
 
-JAR Born in Chaos по умолчанию берётся из `../../ModPack/mods/`;
+JAR Born in Chaos по умолчанию берётся из `../passive skill tree/`;
 для другого расположения используйте `-Pborn_in_chaos_jar=...`.
 Игровые проверки используют только отдельный мир `build/compat-gametest`.
 По умолчанию тестовый запуск не загружает Viltrumite. Флаг `-Pwith_viltrumite=true` добавляет оба

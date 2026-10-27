@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.EventPriority;
@@ -23,7 +24,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-/** Owner-only copies of six command trees. The original trees and the player's OP status stay intact. */
+/** Owner-only copies of vanilla command trees plus /ave inventory. The original trees and the player's OP status stay intact. */
 @EventBusSubscriber(modid = ChaosticSpells.MODID)
 public final class AveCommands {
     private static final SimpleCommandExceptionType DENIED = new SimpleCommandExceptionType(
@@ -43,11 +44,17 @@ public final class AveCommands {
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void register(RegisterCommandsEvent event) {
         var root = Commands.literal("ave").requires(AveCommands::isOwner);
-        for (String name : List.of("give", "effect", "damage", "kill", "locate", "tp")) {
+        for (String name : List.of("give", "effect", "damage", "kill", "locate", "tp", "gamemode", "summon", "attribute")) {
             // Copy the canonical teleport tree so non-OP clients don't need the hidden /teleport root.
             var original = event.getDispatcher().getRoot().getChild(name.equals("tp") ? "teleport" : name);
             if (original != null) root.then(copy(original, name, new IdentityHashMap<>()));
         }
+        var inventory = Commands.literal("inventory")
+                .then(Commands.argument("target", EntityArgument.player())
+                        .executes(context -> AveInventoryMenu.open(context.getSource().getPlayerOrException(),
+                                EntityArgument.getPlayer(context, "target"))))
+                .build();
+        root.then(copy(inventory, "inventory", new IdentityHashMap<>()));
         // Build before registering: register() returns a detached node when /ave already exists (e.g. /ave race).
         event.getDispatcher().register(root);
     }
@@ -76,7 +83,7 @@ public final class AveCommands {
         }
         copies.put(original, result);
         for (var child : original.getChildren()) {
-            // The six vanilla trees have no redirects. A redirect added by another mod could lead outside them
+            // The copied trees have no redirects. A redirect added by another mod could lead outside them
             // (e.g. to the root, like /execute run) with the elevated source, so such branches are not copied.
             if (child.getRedirect() == null) result.addChild(copy(child, null, copies));
         }
