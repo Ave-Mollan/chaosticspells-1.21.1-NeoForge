@@ -62,5 +62,15 @@
   "message.chaosticspells.ave_race_human": "Раса: человек. Способности выключены.",
   "container.chaosticspells.ave_inventory": "Инвентарь: %s",
   "commands.chaosticspells.ave_inventory.self": "Нельзя открыть собственный инвентарь этой командой.",
-  "subtitles.chaosticspells.whip_double": "Двойной щелчок кнута"
+  "subtitles.chaosticspells.whip_double": "Двойной щелчок кнута",
+  "itemGroup.chaosticspells": "Вкладка примера мода",
+  "block.chaosticspells.example_block": "Блок-пример",
+  "item.chaosticspells.example_item": "Предмет-пример",
+  "chaosticspells.configuration.title": "Настройки ChaosticSpells",
+  "chaosticspells.configuration.section.chaosticspells.common.toml": "Настройки ChaosticSpells",
+  "chaosticspells.configuration.section.chaosticspells.common.toml.title": "Настройки ChaosticSpells",
+  "chaosticspells.configuration.items": "Список предметов",
+  "chaosticspells.configuration.logDirtBlock": "Выводить в лог блок земли",
+  "chaosticspells.configuration.magicNumberIntroduction": "Текст магического числа",
+  "chaosticspells.configuration.magicNumber": "Магическое число"
 }

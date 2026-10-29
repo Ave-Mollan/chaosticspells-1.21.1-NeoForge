@@ -46,10 +46,10 @@ public final class WhipClientMotion {
         }
     }
     public static void accept(WhipMotionPayload p) {
-        if(!p.player().equals(OwnersWhipItem.OWNER_UUID))return;
         var level=Minecraft.getInstance().level;
         if(currentLevel!=level){STATES.clear();currentLevel=level;}
         if(level==null || !p.dimension().equals(level.dimension().location()))return;
+        if(!OwnersWhipItem.isOwner(level.getPlayerByUUID(p.player())))return;
         if(p.kind()==WhipMotionPayload.HIDDEN){STATES.remove(p.player());return;}
         Motion s=STATES.get(p.player());
         // After leaving tracking range the last snapshot is stale; start over instead of sliding from it.
@@ -61,14 +61,14 @@ public final class WhipClientMotion {
     @SubscribeEvent public static void tick(ClientTickEvent.Post e) {
         var level=Minecraft.getInstance().level;
         if(currentLevel!=level){STATES.clear();currentLevel=level;}
-        else if(level!=null && !STATES.isEmpty() && level.getPlayerByUUID(OwnersWhipItem.OWNER_UUID)==null) STATES.clear();
+        else if(level!=null && !STATES.isEmpty() && OwnersWhipItem.owner(level)==null) STATES.clear();
     }
     public static Motion forPlayer(Player p){return STATES.get(p.getUUID());}
     public static Motion forStack(ItemStack stack,ItemDisplayContext context) {
         if(stack==null || context==null || context==ItemDisplayContext.GUI || context==ItemDisplayContext.GROUND
                 || context==ItemDisplayContext.FIXED || context==ItemDisplayContext.HEAD)return null;
         var level=Minecraft.getInstance().level;if(level==null)return null;
-        var holder=level.getPlayerByUUID(OwnersWhipItem.OWNER_UUID);
+        var holder=OwnersWhipItem.owner(level);
         if(holder==null || !(holder.getMainHandItem().getItem() instanceof OwnersWhipItem))return null;
         Motion s=STATES.get(holder.getUUID());
         return s!=null && GeoItem.getId(stack)==s.current.item()?s:null;

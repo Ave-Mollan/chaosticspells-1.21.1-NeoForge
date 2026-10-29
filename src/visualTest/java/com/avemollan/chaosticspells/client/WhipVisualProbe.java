@@ -77,8 +77,8 @@ public final class WhipVisualProbe {
     static void setupServer() {
         var c=Minecraft.getInstance();var server=c.getSingleplayerServer();
         server.execute(()->{
-            var owner=server.getPlayerList().getPlayer(OwnersWhipItem.OWNER_UUID);
-            if(owner==null){write("host-failure.txt","Configured owner UUID was not used by the integrated client");return;}
+            var owner=server.getPlayerList().getPlayerByName(OwnersWhipItem.OWNER_NAME);
+            if(owner==null){write("host-failure.txt","Configured owner name was not used by the integrated client");return;}
             var level=owner.serverLevel();
             level.getGameRules().getRule(GameRules.RULE_DOMOBSPAWNING).set(false,server);
             level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false,server);
@@ -109,7 +109,7 @@ public final class WhipVisualProbe {
         worldTicks++;c.mouseHandler.releaseMouse();
         if(ROLE.equals("host") && !prepared && c.getSingleplayerServer()!=null){prepared=true;setupServer();}
         if(COMMANDS){checkCommands(c);return;}
-        var owner=c.level.getPlayerByUUID(OwnersWhipItem.OWNER_UUID);
+        var owner=OwnersWhipItem.owner(c.level);
         var state=owner==null?null:WhipClientMotion.forPlayer(owner);
         if(state==null)return;
         var p=state.current;TRACE.put(p.tick(),Arrays.hashCode(p.points()));

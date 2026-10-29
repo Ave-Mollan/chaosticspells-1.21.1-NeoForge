@@ -34,10 +34,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class WhipGameTests {
+    /** Any UUID: ownership is decided by the player name alone. */
+    private static final UUID OWNER = UUID.randomUUID();
     // Separate batches prevent concurrent tests from sharing the hardcoded owner's charge state.
     @GameTest(template = "empty", batch = "whip_1", timeoutTicks = 70)
     public static void quickLashBypassesArmorAndKnocksBack(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         Zombie target = target(helper);
         target.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
         target.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
@@ -64,7 +66,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_2", timeoutTicks = 130)
     public static void serverTimedChargeReachesTwentyDamage(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         Zombie target = target(helper);
         WhipCombat.handle(owner, WhipActionPayload.START);
         helper.runAfterDelay(45, () -> {
@@ -101,7 +103,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_4")
     public static void wallsRangeAndSlotChangesPreventHits(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         Zombie target = target(helper);
         helper.setBlock(new BlockPos(1, 1, 3), Blocks.STONE);
         helper.setBlock(new BlockPos(1, 2, 3), Blocks.STONE);
@@ -123,7 +125,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_5")
     public static void deathDropsReturnExactStackOnce(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ItemStack whip = owner.getMainHandItem().copy();
         whip.set(DataComponents.CUSTOM_NAME, Component.literal("Persistent test whip"));
         owner.getInventory().clearContent();
@@ -132,7 +134,7 @@ public final class WhipGameTests {
         drops.add(new ItemEntity(helper.getLevel(), owner.getX(), owner.getY(), owner.getZ(), new ItemStack(Items.DIAMOND)));
         NeoForge.EVENT_BUS.post(new LivingDropsEvent(owner, owner.damageSources().generic(), drops, false));
         helper.assertTrue(drops.size() == 1 && drops.getFirst().getItem().is(Items.DIAMOND), "Only the whip must leave the death drops");
-        ServerPlayer respawned = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer respawned = player(helper, OWNER);
         respawned.getInventory().clearContent();
         NeoForge.EVENT_BUS.post(new PlayerEvent.Clone(respawned, owner, true));
         NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerRespawnEvent(respawned, false));
@@ -147,7 +149,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_6")
     public static void fullInventoryDefersRestorationWithoutLoss(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         var drops = new ArrayList<ItemEntity>();
         drops.add(new ItemEntity(helper.getLevel(), owner.getX(), owner.getY(), owner.getZ(), owner.getMainHandItem().copy()));
         NeoForge.EVENT_BUS.post(new LivingDropsEvent(owner, owner.damageSources().generic(), drops, false));
@@ -171,7 +173,7 @@ public final class WhipGameTests {
         drops.add(new ItemEntity(helper.getLevel(), stranger.getX(), stranger.getY(), stranger.getZ(), stranger.getMainHandItem().copy()));
         NeoForge.EVENT_BUS.post(new LivingDropsEvent(stranger, stranger.damageSources().generic(), drops, false));
         helper.assertTrue(drops.size() == 1, "A non-owner's whip must remain a normal drop");
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         owner.getInventory().clearContent();
         NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerRespawnEvent(owner, false));
         helper.assertTrue(owner.getInventory().countItem(ChaosticItemRegistry.OWNERS_WHIP.get()) == 0,
@@ -181,7 +183,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_8", timeoutTicks = 160)
     public static void hitActuallyMovesTargetSeveralBlocks(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         var forcedChunks = new java.util.HashSet<net.minecraft.world.level.ChunkPos>();
         for (int z = 0; z < 14; z++) {
             for (int x = 0; x < 3; x++) {
@@ -218,7 +220,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_9", timeoutTicks = 70)
     public static void sweepHitsMultipleFrontTargetsButNotBehindOrBeyondReach(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         Zombie center = target(helper), left = target(helper), right = target(helper), behind = target(helper), far = target(helper);
         left.setPos(owner.getX()-3, center.getY(), owner.getZ()+4);
         right.setPos(owner.getX()+3, center.getY(), owner.getZ()+4);
@@ -240,7 +242,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_10", timeoutTicks = 70)
     public static void areaSweepDoesNotDamageThroughWalls(GameTestHelper helper) {
-        ServerPlayer owner=player(helper,OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner=player(helper,OWNER);
         Zombie blocked=target(helper);
         helper.setBlock(new BlockPos(1,1,3),Blocks.STONE);
         helper.setBlock(new BlockPos(1,2,3),Blocks.STONE);
@@ -255,7 +257,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_11", timeoutTicks = 100)
     public static void repeatPressQueuesExactlyOneFollowUp(GameTestHelper helper) {
-        ServerPlayer owner=player(helper,OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner=player(helper,OWNER);
         Zombie target=target(helper);
         WhipCombat.handle(owner,WhipActionPayload.START);
         WhipCombat.handle(owner,WhipActionPayload.RELEASE);
@@ -275,7 +277,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_12", timeoutTicks = 90)
     public static void slotChangeCancelsQueuedFollowUp(GameTestHelper helper) {
-        ServerPlayer owner=player(helper,OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner=player(helper,OWNER);
         Zombie target=target(helper);
         WhipCombat.handle(owner,WhipActionPayload.START);
         WhipCombat.handle(owner,WhipActionPayload.RELEASE);
@@ -293,13 +295,13 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_13")
     public static void deathRetainsCursorWhipAndSurvivesNonDeathClone(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         owner.containerMenu.setCarried(new ItemStack(ChaosticItemRegistry.OWNERS_WHIP.get()));
         NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingDeathEvent(owner, owner.damageSources().generic()));
         helper.assertTrue(owner.getInventory().countItem(ChaosticItemRegistry.OWNERS_WHIP.get()) == 0 && owner.containerMenu.getCarried().isEmpty(),
                 "Death must take the held and cursor whips out of reach of grave mods and menu-close drops");
         // The End exit portal recreates the player through a clone with wasDeath=false.
-        ServerPlayer returned = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer returned = player(helper, OWNER);
         returned.getInventory().clearContent();
         NeoForge.EVENT_BUS.post(new PlayerEvent.Clone(returned, owner, false));
         WhipRetention.restore(returned);
@@ -310,7 +312,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_14")
     public static void creativeFullInventoryKeepsWhipPending(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         var drops = new ArrayList<ItemEntity>();
         drops.add(new ItemEntity(helper.getLevel(), owner.getX(), owner.getY(), owner.getZ(), owner.getMainHandItem().copy()));
         NeoForge.EVENT_BUS.post(new LivingDropsEvent(owner, owner.damageSources().generic(), drops, false));
@@ -326,7 +328,7 @@ public final class WhipGameTests {
 
     @GameTest(template = "empty", batch = "whip_15")
     public static void sweepSparesOwnPetsArmorStandsAndMount(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         for (int x = -1; x <= 3; x++) for (int z = 0; z <= 6; z++) for (int y = 1; y <= 3; y++) helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
         Zombie control = target(helper);
         var wolf = helper.spawn(EntityType.WOLF, new BlockPos(0, 1, 5));
@@ -351,7 +353,7 @@ public final class WhipGameTests {
     }
 
     private static ServerPlayer player(GameTestHelper helper, UUID uuid) {
-        var profile = new GameProfile(uuid, "AveMollan");
+        var profile = new GameProfile(uuid, OWNER.equals(uuid) ? OwnersWhipItem.OWNER_NAME : "Stranger");
         var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), profile, ClientInformation.createDefault());
         player.connection = FakePlayerFactory.get(helper.getLevel(), profile).connection;
         player.moveTo(helper.absolutePos(new BlockPos(1, 1, 1)).getBottomCenter());

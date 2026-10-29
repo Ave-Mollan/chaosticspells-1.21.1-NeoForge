@@ -27,7 +27,7 @@ public final class AveViltrumiteAccess {
     }
 
     public static boolean isOwner(Entity entity) {
-        return entity != null && OwnersWhipItem.OWNER_UUID.equals(entity.getUUID());
+        return OwnersWhipItem.isOwner(entity);
     }
 
     public static boolean selected(Entity entity) {

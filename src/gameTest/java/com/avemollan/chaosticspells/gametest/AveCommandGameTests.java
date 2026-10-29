@@ -41,11 +41,13 @@ import net.neoforged.neoforge.server.command.CommandHelper;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class AveCommandGameTests {
+    /** Any UUID: ownership is decided by the player name alone. */
+    private static final UUID OWNER = UUID.randomUUID();
     private static final List<String> ALIASES = List.of("give", "effect", "damage", "kill", "locate", "tp", "gamemode", "summon", "attribute");
 
     @GameTest(template = "empty", batch = "ave_commands_tree")
     public static void onlyTheOwnerReceivesThePrivilegedCommandTree(GameTestHelper h) {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID).createCommandSourceStack().withPermission(0);
+        var owner = player(h, OWNER).createCommandSourceStack().withPermission(0);
         var admin = player(h, UUID.randomUUID()).createCommandSourceStack().withPermission(4);
         var root = commands(h).getRoot();
         h.assertTrue(root.getChild("ave").canUse(owner), "Owner must have /ave without OP, with or without optional mods");
@@ -69,7 +71,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_access")
     public static void operatorsConsoleAndExecuteAsCannotImpersonateTheOwner(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var admin = player(h, UUID.randomUUID()).createCommandSourceStack().withPermission(4);
         var console = h.getLevel().getServer().createCommandSourceStack();
         for (var forbidden : List.of(admin, admin.withEntity(owner), console, console.withEntity(owner))) {
@@ -93,7 +95,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_execute")
     public static void executeAsAnotherEntityCannotBorrowTheOwnersAccess(GameTestHelper h) {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var target = h.spawn(EntityType.PIG, new BlockPos(2, 1, 2));
         target.addTag("ave_execute_test");
         var commands = h.getLevel().getServer().getCommands();
@@ -113,7 +115,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_inventory")
     public static void giveAndEffectAcceptSelectorsWithoutGrantingOp(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var source = owner.createCommandSourceStack().withPermission(0);
         commands(h).execute("ave give @s minecraft:diamond 3", source);
         h.assertTrue(owner.getInventory().countItem(Items.DIAMOND) == 3, "Give must deliver the requested item count");
@@ -131,7 +133,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_damage")
     public static void damageAndKillRunVanillaActionsWithoutOp(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var source = owner.createCommandSourceStack().withPermission(0);
         var target = h.spawn(EntityType.PIG, new BlockPos(2, 1, 2));
         target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(40);
@@ -147,7 +149,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_tp")
     public static void teleportPreservesThePlayersRelativeCoordinates(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         // FakePlayer's listener intentionally ignores teleport. Use the real listener's movement
         // implementation, stubbing only network output, so this verifies actual vanilla teleport.
         var connection = new Connection(PacketFlow.SERVERBOUND) {
@@ -170,7 +172,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_locate")
     public static void locateAndNativeArgumentSuggestionsWorkWithoutOp(GameTestHelper h) throws Exception {
-        var source = player(h, OwnersWhipItem.OWNER_UUID).createCommandSourceStack().withPermission(0);
+        var source = player(h, OWNER).createCommandSourceStack().withPermission(0);
         String biome = h.getLevel().getBiome(BlockPos.containing(source.getPosition())).unwrapKey().orElseThrow().location().toString();
         commands(h).execute("ave locate biome " + biome, source);
         var structure = commands(h).parse("ave locate structure minecraft:village_plains", source);
@@ -185,7 +187,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_gamemode")
     public static void gamemodeChangesSelfAndTargetsWithoutOp(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var target = player(h, UUID.randomUUID());
         var source = owner.createCommandSourceStack().withPermission(0);
         for (String mode : List.of("creative", "spectator", "adventure", "survival")) {
@@ -209,7 +211,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_summon")
     public static void summonAndAttributeWorkWithoutOp(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var source = owner.createCommandSourceStack().withPermission(0);
         var at = h.absolutePos(new BlockPos(2, 1, 2));
         commands(h).execute("ave summon minecraft:pig " + at.getX() + " " + at.getY() + " " + at.getZ()
@@ -240,7 +242,7 @@ public final class AveCommandGameTests {
 
     @GameTest(template = "empty", batch = "ave_commands_invsee")
     public static void inventoryOpensAnotherPlayersLiveInventory(GameTestHelper h) throws Exception {
-        var owner = player(h, OwnersWhipItem.OWNER_UUID);
+        var owner = player(h, OWNER);
         var target = player(h, UUID.randomUUID());
         var source = owner.createCommandSourceStack().withPermission(0);
         boolean denied = false;
@@ -304,7 +306,7 @@ public final class AveCommandGameTests {
     }
 
     private static ServerPlayer player(GameTestHelper h, UUID uuid) {
-        var profile = new GameProfile(uuid, "AveMollan");
+        var profile = new GameProfile(uuid, OWNER.equals(uuid) ? OwnersWhipItem.OWNER_NAME : "Stranger");
         var player = new ServerPlayer(h.getLevel().getServer(), h.getLevel(), profile, ClientInformation.createDefault());
         player.connection = FakePlayerFactory.get(h.getLevel(), profile).connection;
         player.moveTo(h.absolutePos(new BlockPos(1, 1, 1)).getBottomCenter());

@@ -1,20 +1,20 @@
 # ChaosticSpells — личный кнут AveMollan
 
 Отдельная копия ChaosticSpells 1.1.2 для Minecraft 1.21.1 / NeoForge.
-Разрешённый UUID жёстко задан в коде: `516e7a70-c667-499b-9870-2783e9e7b214`.
-Совпадения одного имени недостаточно: право использования проверяется сервером по UUID.
+The owner is fixed in code by player name only: `AveMollan` (exact, case-sensitive).
+The UUID is not checked; the server grants access to whichever player is named `AveMollan`.
 
 ## Установка
 
-Файл: `build/libs/chaosticspells-1.1.2-whip.11.jar`.
+Файл: `build/libs/chaosticspells-1.1.2-whip.12.jar`.
 
 Замените обычный JAR ChaosticSpells на эту версию **на сервере и у всех игроков**.
 У обеих версий одинаковый mod ID: одновременно устанавливать их нельзя.
 Остальные зависимости те же, что в основном README: Java 21, NeoForge, Iron's Spells 'n Spellbooks,
 Born in Chaos, Iron's Lib, GeckoLib, Curios и Player Animator.
 
-UUID должен совпадать с UUID, который сервер назначает игроку. В режиме `online-mode=false`
-сервер обычно выдаёт другой UUID; эта сборка намеренно разрешает только указанный выше UUID.
+Because only the name is checked, this also works with `online-mode=false`. On such a server anyone
+who joins as `AveMollan` gets the whip's rights, so protect the name (e.g. with an auth plugin or whitelist).
 Для ударов по игрокам на сервере должен быть включён PvP; запрет PvP между союзниками сохраняется.
 
 ## Опциональная интеграция Viltrumite
@@ -24,7 +24,7 @@ ChaosticSpells не требует ViltrumiteCore и ViltrumiteFlight. Если 
 - `viltrumitecore-1.11.1-neoforge-1.21.1.jar`;
 - `viltrumiteflight-1.21.1-neoforge-1.6.8.jar`;
 
-включается режим доступа только для UUID AveMollan. Оригинальные JAR Viltrumite менять не требуется:
+включается режим доступа только для игрока AveMollan. Оригинальные JAR Viltrumite менять не требуется:
 вся интеграция находится в ChaosticSpells. Сам ViltrumiteCore по-прежнему требует ViltrumiteFlight.
 Для интеграции одинаковые три мода должны стоять на сервере и клиентах.
 
@@ -38,7 +38,7 @@ ChaosticSpells не требует ViltrumiteCore и ViltrumiteFlight. Если 
 ```
 
 Первая команда переключает расу, две следующие явно устанавливают её. Команда `/ave` недоступна
-другим UUID, включая других операторов; совпадение имени не даёт доступ.
+другим игрокам, включая операторов.
 Выбор сохраняется при перезаходе, перезапуске, смерти и смене измерения.
 
 У обычных игроков и AveMollan в человеческом режиме:
@@ -63,7 +63,7 @@ AveMollan. Возврат в человека останавливает акт�
 
 ## AveMollan commands without OP
 
-Ten commands with the `/ave` prefix are available to the owner UUID. They work without OP,
+Ten commands with the `/ave` prefix are available to the player named `AveMollan`. They work without OP,
 in human mode and without the Viltrumite mods. The copied commands keep vanilla Minecraft
 arguments, selectors, relative coordinates and completion:
 
@@ -103,7 +103,7 @@ inventory, including shift-click; the target sees changes immediately.
 - The view closes when the target logs out, respawns or is removed. Opening your own inventory
   is rejected.
 
-Other UUIDs, including operators with the same name, do not receive `/ave` in the command tree
+Other players, including operators, do not receive `/ave` in the command tree
 and cannot call it manually. The real sender is checked, so administrator or console
 `/execute as` cannot impersonate the owner. Permission level 2 is scoped to parsing, suggestions
 and execution of these subcommands; OP status and the player's persistent permissions do not

@@ -13,6 +13,7 @@
     "compat.viltrumite.ServerPayloadAccessMixin",
     "compat.viltrumite.AutomaticWorldEventsMixin",
     "compat.viltrumite.BloodEventsAccessMixin",
+    "compat.viltrumite.ShieldBlockingFixMixin",
     "AbstractSpellMixin",
     "MagicManagerRegenBornInChaosManaMixin",
     "compat.bicnightmare.BcNightmareCompatMixin_Accessor_Entity_ItemStack",

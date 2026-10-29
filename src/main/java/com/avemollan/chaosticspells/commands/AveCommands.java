@@ -33,7 +33,7 @@ public final class AveCommands {
     public static boolean isOwner(CommandSourceStack source) {
         // withEntity (including /execute as) keeps the original sender in source.source.
         return source.source instanceof ServerPlayer sender && sender == source.getEntity()
-                && OwnersWhipItem.OWNER_UUID.equals(sender.getUUID());
+                && OwnersWhipItem.isOwner(sender);
     }
 
     private static CommandSourceStack privileged(CommandSourceStack source) throws CommandSyntaxException {

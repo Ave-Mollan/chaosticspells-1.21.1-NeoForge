@@ -1,10 +1,10 @@
 package com.avemollan.chaosticspells.item;
 
 import java.util.List;
-import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -19,9 +19,9 @@ import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-/** Server authorization is deliberately fixed to the account from the supplied screenshot. */
+/** Server authorization is deliberately fixed to the player name only; the UUID is ignored. */
 public final class OwnersWhipItem extends Item implements GeoItem {
-    public static final UUID OWNER_UUID = UUID.fromString("516e7a70-c667-499b-9870-2783e9e7b214");
+    public static final String OWNER_NAME = "AveMollan";
     public static final int MAX_CHARGE_TICKS = 40;
     public static final int COOLDOWN_TICKS = 12;
     public static final double REACH = 8.0;
@@ -31,8 +31,14 @@ public final class OwnersWhipItem extends Item implements GeoItem {
         super(new Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant());
     }
 
-    public static boolean isOwner(Player player) {
-        return OWNER_UUID.equals(player.getUUID());
+    public static boolean isOwner(Entity entity) {
+        return entity instanceof Player player && OWNER_NAME.equals(player.getGameProfile().getName());
+    }
+
+    /** The owner among the level's players, or null. */
+    public static Player owner(Level level) {
+        for (Player player : level.players()) if (isOwner(player)) return player;
+        return null;
     }
 
     public static float damageForTicks(long ticks) {
@@ -50,8 +56,8 @@ public final class OwnersWhipItem extends Item implements GeoItem {
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity holder, int slot, boolean selected) {
-        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel && OWNER_UUID.equals(holder.getUUID())) {
+    public void inventoryTick(ItemStack stack, Level level, Entity holder, int slot, boolean selected) {
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel && isOwner(holder)) {
             GeoItem.getOrAssignId(stack, serverLevel);
         }
     }

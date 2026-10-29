@@ -27,6 +27,8 @@ import org.joml.Vector3d;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class WorldWhipGameTests {
+    /** Any UUID: ownership is decided by the player name alone. */
+    private static final UUID OWNER = UUID.randomUUID();
     private static final int CRACK=WhipArmPose.CRACK,LENGTH=WhipArmPose.LENGTH;
     private static boolean attacking(int tick){return tick>=0 && tick<LENGTH;}
     private static WhipArmPose.Frame frame(int tick) {
@@ -147,7 +149,7 @@ public final class WorldWhipGameTests {
             h.setBlock(new BlockPos(x,0,z),Blocks.STONE);
             for(int y=1;y<=4;y++)h.setBlock(new BlockPos(x,y,z),Blocks.AIR);
         }
-        var profile=new GameProfile(OwnersWhipItem.OWNER_UUID,"AveMollan");
+        var profile=new GameProfile(OWNER,OwnersWhipItem.OWNER_NAME);
         var p=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),profile,ClientInformation.createDefault());
         p.connection=FakePlayerFactory.get(h.getLevel(),profile).connection;p.moveTo(h.absolutePos(new BlockPos(0,1,0)).getBottomCenter());p.yBodyRot=0;
         p.setItemSlot(EquipmentSlot.MAINHAND,ChaosticItemRegistry.OWNERS_WHIP.get().getDefaultInstance());return p;

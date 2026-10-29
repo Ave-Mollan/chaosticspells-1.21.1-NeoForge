@@ -39,9 +39,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder("chaosticspells_tests")
 @PrefixGameTestTemplate(false)
 public final class AveViltrumiteGameTests {
+    /** Any UUID: ownership is decided by the player name alone. */
+    private static final UUID OWNER = UUID.randomUUID();
     @GameTest(template = "empty", batch = "ave_creative")
     public static void vanillaCreativeFlightSurvivesCustomFlightStopAndTick(GameTestHelper helper) {
-        for (UUID uuid : new UUID[]{OwnersWhipItem.OWNER_UUID,UUID.randomUUID()}) {
+        for (UUID uuid : new UUID[]{OWNER,UUID.randomUUID()}) {
             ServerPlayer player=player(helper,uuid);
             player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
             ViltrumiteIntegration.synchronize(player);
@@ -66,7 +68,7 @@ public final class AveViltrumiteGameTests {
             helper.assertTrue(!player.getAbilities().flying,"A grabbed human must still lose flight while held");
             player.removeTag(AveViltrumiteAccess.GRABBED_TAG);
         }
-        ServerPlayer owner=player(helper,OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner=player(helper,OWNER);
         ViltrumiteIntegration.changeRace(owner,true);
         owner.getAbilities().flying=true;
         flight(owner).stopFlight();
@@ -95,7 +97,7 @@ public final class AveViltrumiteGameTests {
 
     @GameTest(template = "empty", batch = "ave_1")
     public static void everyoneStartsHumanAndRaceCannotBeForged(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ServerPlayer stranger = player(helper, UUID.randomUUID());
         helper.assertTrue(!core(owner).isViltrumite() && !core(stranger).isViltrumite(), "Both players must start human");
         helper.assertTrue(core(owner).hasChosenRace() && core(stranger).hasChosenRace(), "No player may be prompted to select a race");
@@ -111,7 +113,7 @@ public final class AveViltrumiteGameTests {
 
     @GameTest(template = "empty", batch = "ave_2")
     public static void ownerCommandWorksWithoutOpAndIsHiddenFromOthers(GameTestHelper helper) throws Exception {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ServerPlayer stranger = player(helper, UUID.randomUUID());
         var dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
         var ownSource = owner.createCommandSourceStack().withPermission(0);
@@ -136,7 +138,7 @@ public final class AveViltrumiteGameTests {
         stranger.connection.handleCustomPayload(new ServerboundCustomPayloadPacket(FlightToggleC2SPacket.INSTANCE));
         helper.assertTrue(!core(stranger).isViltrumite() && !core(stranger).isDashing()
                 && flight(stranger).getFlightState() == FlightState.NONE, "Unauthorized C2S packets must not grant actions");
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ViltrumiteIntegration.changeRace(owner, true);
         helper.assertTrue(AveViltrumiteAccess.allowPayload(owner, ResourceLocation.parse("viltrumitecore:punch")), "Active owner may send ability input");
         helper.assertTrue(!AveViltrumiteAccess.allowPayload(owner, RaceChoiceC2SPacket.TYPE.id()), "Race choice packets must stay blocked even for the owner");
@@ -147,7 +149,7 @@ public final class AveViltrumiteGameTests {
 
     @GameTest(template = "empty", batch = "ave_4")
     public static void humanModeClearsFlightAbilitiesAndOnlyModAttributes(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ViltrumiteIntegration.changeRace(owner, true);
         core(owner).setBlocking(true);
         core(owner).setBarraging(true);
@@ -173,14 +175,14 @@ public final class AveViltrumiteGameTests {
 
     @GameTest(template = "empty", batch = "ave_5")
     public static void raceChoiceSurvivesSaveLoadAndDeathClone(GameTestHelper helper) {
-        ServerPlayer owner = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer owner = player(helper, OWNER);
         ViltrumiteIntegration.changeRace(owner, true);
         CompoundTag saved = owner.saveWithoutId(new CompoundTag());
-        ServerPlayer loaded = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer loaded = player(helper, OWNER);
         loaded.load(saved);
         ViltrumiteIntegration.synchronize(loaded);
         helper.assertTrue(AveViltrumiteAccess.isActive(loaded), "The explicit race opt-in must survive save/load");
-        ServerPlayer respawned = player(helper, OwnersWhipItem.OWNER_UUID);
+        ServerPlayer respawned = player(helper, OWNER);
         NeoForge.EVENT_BUS.post(new PlayerEvent.Clone(respawned, loaded, true));
         helper.assertTrue(AveViltrumiteAccess.isActive(respawned), "The owner race choice must survive a death clone");
         ViltrumiteIntegration.changeRace(respawned, false);
@@ -231,7 +233,7 @@ public final class AveViltrumiteGameTests {
     }
 
     private static ServerPlayer player(GameTestHelper helper, UUID uuid) {
-        GameProfile profile = new GameProfile(uuid, "AveMollan");
+        GameProfile profile = new GameProfile(uuid, OWNER.equals(uuid) ? OwnersWhipItem.OWNER_NAME : "Stranger");
         ServerPlayer player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), profile, ClientInformation.createDefault());
         player.connection = FakePlayerFactory.get(helper.getLevel(), profile).connection;
         player.moveTo(helper.absolutePos(new BlockPos(1, 1, 1)).getBottomCenter());
