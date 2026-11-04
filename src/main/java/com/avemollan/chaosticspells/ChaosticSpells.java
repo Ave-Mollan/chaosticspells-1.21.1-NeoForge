@@ -33,6 +33,7 @@ public class ChaosticSpells {
         ChaosticArmorMaterialRegistry.register(modEventBus);
         ChaosticAttributeRegistry.register(modEventBus);
         ChaosticMobEffectRegistry.register(modEventBus);
+        com.avemollan.chaosticspells.registry.ChaosticParticleRegistry.register(modEventBus);
         ChaosticSchoolRegistry.register(modEventBus);
         ChaosticSpellRegistry.register(modEventBus);
         ChaosticEntityRegistry.register(modEventBus);

@@ -1,13 +1,14 @@
 # ChaosticSpells 1.1.2 — Whip Edition
 
 Эта копия содержит личный анимированный кнут AveMollan. Установка, команда выдачи и управление: [WHIP_README.md](WHIP_README.md).
-Сборка копии: `build/libs/chaosticspells-1.1.2-whip.13.jar`. Кнут использует текстуру 16×16, физический ремень,
+Сборка копии: `build/libs/chaosticspells-1.1.2-whip.14.jar`. Кнут использует текстуру 16×16, физический ремень,
 пользовательские звуки и широкую дугу попадания по нескольким целям.
 Физика ремня рассчитывается сервером в координатах мира и передаётся наблюдателям вместе
 с параметрами анимации настоящей руки игрока. После удара ремень опускается на землю.
 Owner-only commands `/ave give`, `/ave effect`, `/ave damage`, `/ave kill`, `/ave locate`, `/ave tp`,
 `/ave gamemode`, `/ave summon` and `/ave attribute` work without OP and use vanilla arguments.
 `/ave inventory <player>` opens another player's inventory (hotbar, main, armor, offhand) for taking and moving items.
+Полный сет магической брони из тёмного металла окружает игрока багровыми искрами хаоса (`chaosticspells:chaos_ember`, только клиент).
 
 Ниже сохранена документация базовой версии 1.1.2.
 
