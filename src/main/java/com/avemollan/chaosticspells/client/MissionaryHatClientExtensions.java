@@ -3,7 +3,6 @@ package com.avemollan.chaosticspells.client;
 import java.util.Collections;
 import java.util.Map;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -20,7 +19,7 @@ public enum MissionaryHatClientExtensions implements IClientItemExtensions {
     public HumanoidModel<?> getHumanoidArmorModel(
             LivingEntity entity, ItemStack stack, EquipmentSlot slot, HumanoidModel<?> original) {
         var headGeom = new MissionaryHatModel(
-                        Minecraft.getInstance().getEntityModels().bakeLayer(MissionaryHatModel.LAYER_LOCATION))
+                        ArmorModelCache.bake(MissionaryHatModel.LAYER_LOCATION))
                 .getHeadPart();
         HumanoidModel<?> armorModel = new HumanoidModel<>(new ModelPart(Collections.emptyList(), Map.of(
                 "head", headGeom,

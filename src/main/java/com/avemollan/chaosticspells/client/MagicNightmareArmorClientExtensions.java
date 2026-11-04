@@ -3,7 +3,6 @@ package com.avemollan.chaosticspells.client;
 import java.util.Collections;
 import java.util.Map;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -34,7 +33,7 @@ public enum MagicNightmareArmorClientExtensions implements IClientItemExtensions
     @Override
     public HumanoidModel<?> getHumanoidArmorModel(
             LivingEntity entity, ItemStack stack, EquipmentSlot slot, HumanoidModel<?> original) {
-        ModelPart baked = Minecraft.getInstance().getEntityModels().bakeLayer(layer);
+        ModelPart baked = ArmorModelCache.bake(layer);
         HumanoidModel<?> armorModel =
                 switch (piece) {
                     case HELMET -> {

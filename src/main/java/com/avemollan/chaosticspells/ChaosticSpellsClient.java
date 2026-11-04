@@ -8,6 +8,8 @@ import com.avemollan.chaosticspells.client.MagicArrowRenderer;
 import com.avemollan.chaosticspells.client.PumpkinBarrageRenderer;
 import com.avemollan.chaosticspells.client.RaisedBabySkeletonRenderer;
 import com.avemollan.chaosticspells.client.RaisedFallenChaosKnightRenderer;
+import com.avemollan.chaosticspells.client.ArmorModelCache;
+import com.avemollan.chaosticspells.client.BicDarkMetalLeggingsClientExtensions;
 import com.avemollan.chaosticspells.client.MagicDarkMetalArmorClientExtensions;
 import com.avemollan.chaosticspells.client.MagicNightmareArmorClientExtensions;
 import com.avemollan.chaosticspells.client.MissionaryHatClientExtensions;
@@ -31,6 +33,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
@@ -147,6 +150,19 @@ public class ChaosticSpellsClient {
         event.registerLayerDefinition(MagicDarkMetalChestplateModel.LAYER_LOCATION, MagicDarkMetalChestplateModel::createBodyLayer);
         event.registerLayerDefinition(MagicDarkMetalLeggingsModel.LAYER_LOCATION, MagicDarkMetalLeggingsModel::createBodyLayer);
         event.registerLayerDefinition(MagicDarkMetalBootModel.LAYER_LOCATION, MagicDarkMetalBootModel::createBodyLayer);
+        event.registerLayerDefinition(BicDarkMetalLeggingsClientExtensions.LAYER_LOCATION, BicDarkMetalLeggingsClientExtensions::createBodyLayer);
+    }
+
+    /** Runs after every entity model reload; drops armor models baked from the previous resource packs. */
+    @SubscribeEvent
+    static void clearArmorModelCache(EntityRenderersEvent.AddLayers event) {
+        ArmorModelCache.clear();
+    }
+
+    /** Lowest priority: Born in Chaos registers its own extensions first; ours is skipped if it ever adds one. */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    static void registerBornInChaosClientExtensions(RegisterClientExtensionsEvent event) {
+        BicDarkMetalLeggingsClientExtensions.register(event);
     }
 
     @SubscribeEvent

@@ -35,6 +35,7 @@
     "compat.viltrumite.ClientAbilityInputMixin",
     "compat.viltrumite.ClientFlightInputMixin",
     "ClientEntityMagicSummonGlowColorMixin",
-    "ClientMinecraftMagicSummonGlowMixin"
+    "ClientMinecraftMagicSummonGlowMixin",
+    "compat.bicdarkmetal.BcDarkMetalArmorModelCacheMixin"
   ]
 }
