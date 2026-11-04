@@ -17,54 +17,10 @@ Because only the name is checked, this also works with `online-mode=false`. On s
 who joins as `AveMollan` gets the whip's rights, so protect the name (e.g. with an auth plugin or whitelist).
 Для ударов по игрокам на сервере должен быть включён PvP; запрет PvP между союзниками сохраняется.
 
-## Опциональная интеграция Viltrumite
-
-ChaosticSpells не требует ViltrumiteCore и ViltrumiteFlight. Если присутствуют оба предоставленных мода:
-
-- `viltrumitecore-1.11.1-neoforge-1.21.1.jar`;
-- `viltrumiteflight-1.21.1-neoforge-1.6.8.jar`;
-
-включается режим доступа только для игрока AveMollan. Оригинальные JAR Viltrumite менять не требуется:
-вся интеграция находится в ChaosticSpells. Сам ViltrumiteCore по-прежнему требует ViltrumiteFlight.
-Для интеграции одинаковые три мода должны стоять на сервере и клиентах.
-
-По умолчанию **все игроки, включая AveMollan, — люди**. Выбор расы при входе не появляется.
-Владелец может переключать свою расу командой без статуса OP:
-
-```mcfunction
-/ave race
-/ave race viltrumite
-/ave race human
-```
-
-Первая команда переключает расу, две следующие явно устанавливают её. Команда `/ave` недоступна
-другим игрокам, включая операторов.
-Выбор сохраняется при перезаходе, перезапуске, смерти и смене измерения.
-
-У обычных игроков и AveMollan в человеческом режиме:
-
-- способности, ускорение, сверхполёт и входящие команды способностей заблокированы на сервере;
-- скрыты меню Viltrumite, панель способностей, выбор расы, привязки клавиш и творческие предметы мода;
-- сохраняется обычное отображение рук Minecraft: пустая вторая рука не появляется, обычный щит или
-  другой предмет в левой руке продолжает отображаться по правилам Minecraft;
-- старые Viltrumite-скины, плащи и бонусы характеристик не применяются;
-- двойное нажатие прыжка не включает полёт Viltrumite; обычный полёт креатива и наблюдателя
-  сохраняется. Сброс режима ViltrumiteFlight больше не отключает ванильный полёт каждый тик;
-- вирус не превращает другого игрока в вилтрумита.
-
-После `/ave race viltrumite` способности, интерфейс и отображение рук Viltrumite доступны только
-AveMollan. Возврат в человека останавливает активные способности и полёт, убирает бонусы этого мода.
-Старые команды выдачи силы и полёта отключены; косметические команды доступны активному владельцу.
-Автоматические вторжения и метеориты отключены, существующие сохранённые мировые события
-останавливаются при загрузке мира.
-
-Ограничение касается игрового поведения и интерфейса. Установленные JAR остаются видны в списке
-модов NeoForge и на диске; клиентам нужны сами моды для совместимости с сервером.
-
 ## AveMollan commands without OP
 
-Ten commands with the `/ave` prefix are available to the player named `AveMollan`. They work without OP,
-in human mode and without the Viltrumite mods. The copied commands keep vanilla Minecraft
+Ten commands with the `/ave` prefix are available to the player named `AveMollan`. They work without OP.
+The copied commands keep vanilla Minecraft
 arguments, selectors, relative coordinates and completion:
 
 ```mcfunction
@@ -225,13 +181,9 @@ change. Ordinary `/give`, `/effect`, `/damage`, `/kill`, `/locate`, `/tp`, `/gam
 ```powershell
 .\gradlew.bat build
 .\gradlew.bat runGameTestServer
-.\gradlew.bat runGameTestServer -Pwith_viltrumite=true
 ```
 
 JAR Born in Chaos по умолчанию берётся из `../passive skill tree/`;
 для другого расположения используйте `-Pborn_in_chaos_jar=...`.
 Игровые проверки используют только отдельный мир `build/compat-gametest`.
-По умолчанию тестовый запуск не загружает Viltrumite. Флаг `-Pwith_viltrumite=true` добавляет оба
-локальных JAR из корня проекта и дополнительные проверки интеграции. JAR Viltrumite используются
-для компиляции интерфейсов и тестового запуска, но внутрь итогового ChaosticSpells не включаются.
 Исходники этой копии опубликованы в ветке `codex/whip-7-world-physics` репозитория проекта.

@@ -8,13 +8,13 @@
 Запустить хозяина из корня проекта:
 
 ```powershell
-.\gradlew.bat runClient -Pwhip_visual_test=true -Pwhip_visual_role=host -Pwith_viltrumite=true -Pave_client_uuid=516e7a70-c667-499b-9870-2783e9e7b214 -Pave_client_name=AveMollan -Pave_client_dir=whip7-client-host --offline --no-daemon --console=plain
+.\gradlew.bat runClient -Pwhip_visual_test=true -Pwhip_visual_role=host -Pave_client_uuid=516e7a70-c667-499b-9870-2783e9e7b214 -Pave_client_name=AveMollan -Pave_client_dir=whip7-client-host --offline --no-daemon --console=plain
 ```
 
 После появления `build/whip7-visual-session/ready.txt` запустить во втором терминале:
 
 ```powershell
-.\gradlew.bat runClient -Pwhip_visual_test=true -Pwhip_visual_role=observer -Pwith_viltrumite=true -Pave_client_uuid=2a8ddf21-e3b7-4b3b-89ca-b4f7c147d1aa -Pave_client_name=WhipObserver -Pave_client_dir=whip7-client-observer '-Pave_client_server=127.0.0.1:25574' --offline --no-daemon --console=plain
+.\gradlew.bat runClient -Pwhip_visual_test=true -Pwhip_visual_role=observer -Pave_client_uuid=2a8ddf21-e3b7-4b3b-89ca-b4f7c147d1aa -Pave_client_name=WhipObserver -Pave_client_dir=whip7-client-observer '-Pave_client_server=127.0.0.1:25574' --offline --no-daemon --console=plain
 ```
 
 Оба клиента автоматически завершаются после проверки. Перед повторным запуском
@@ -46,7 +46,7 @@
 вне `/ave` должны остаться ограниченными; OP после выполнения не появляется.
 
 ```powershell
-.\gradlew.bat runClient -Pwhip_visual_test=true -Pave_command_test=true -Pwhip_visual_role=host -Pwith_viltrumite=true -Pave_client_uuid=516e7a70-c667-499b-9870-2783e9e7b214 -Pave_client_name=AveMollan -Pave_client_dir=ave-commands-client --offline --no-daemon --console=plain
+.\gradlew.bat runClient -Pwhip_visual_test=true -Pave_command_test=true -Pwhip_visual_role=host -Pave_client_uuid=516e7a70-c667-499b-9870-2783e9e7b214 -Pave_client_name=AveMollan -Pave_client_dir=ave-commands-client --offline --no-daemon --console=plain
 ```
 
 Результат: `build/ave-commands-session/commands-done.txt` либо `commands-failure.txt`.

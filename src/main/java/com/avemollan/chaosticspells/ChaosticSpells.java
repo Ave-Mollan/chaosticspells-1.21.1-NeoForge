@@ -46,9 +46,6 @@ public class ChaosticSpells {
             GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.BONESCALLER_STAFF.get());
             GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.CHAOS_STAFF.get());
             GeoItem.registerSyncedAnimatable(ChaosticItemRegistry.OWNERS_WHIP.get());
-            if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
-                com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteIntegration.install();
-            }
         }));
 
         NeoForge.EVENT_BUS.register(DeathPactEventHandler.class);

@@ -55,7 +55,7 @@ public final class AveCommands {
                                 EntityArgument.getPlayer(context, "target"))))
                 .build();
         root.then(copy(inventory, "inventory", new IdentityHashMap<>()));
-        // Build before registering: register() returns a detached node when /ave already exists (e.g. /ave race).
+        // Build before registering: register() returns a detached node when /ave already exists.
         event.getDispatcher().register(root);
     }
 

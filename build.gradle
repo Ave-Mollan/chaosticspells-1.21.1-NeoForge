@@ -40,11 +40,6 @@ configurations.gameTestImplementation.extendsFrom(configurations.implementation)
 configurations.gameTestRuntimeOnly.extendsFrom(configurations.runtimeOnly, configurations.localRuntime)
 
 def bornInChaosJar = file(providers.gradleProperty('born_in_chaos_jar').get())
-def viltrumiteJars = files('viltrumitecore-1.11.1-neoforge-1.21.1.jar', 'viltrumiteflight-1.21.1-neoforge-1.6.8.jar')
-def withViltrumite = providers.gradleProperty('with_viltrumite').map { it.toBoolean() }.getOrElse(false)
-if (withViltrumite) {
-    sourceSets.gameTest.java.srcDir('src/viltrumiteTest/java')
-}
 def whipVisualTest = providers.gradleProperty('whip_visual_test').map { it.toBoolean() }.getOrElse(false)
 if (whipVisualTest) sourceSets.main.java.srcDir('src/visualTest/java')
 
@@ -176,12 +171,6 @@ configurations {
 }
 
 dependencies {
-    // SDK only: not bundled and never a required runtime dependency of ChaosticSpells.
-    compileOnly viltrumiteJars
-    if (withViltrumite) {
-        localRuntime viltrumiteJars
-        gameTestImplementation viltrumiteJars
-    }
     // MixinExtras (@ModifyExpressionValue) — resolves at compile-time; NeoForge bundles runtime shim
     implementation 'io.github.llamalad7:mixinextras-common:0.5.1'
 

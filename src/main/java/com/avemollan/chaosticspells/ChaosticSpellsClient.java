@@ -101,18 +101,8 @@ public class ChaosticSpellsClient {
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
-        if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
-            event.enqueueWork(com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteClientPolicy::install);
-        }
         ChaosticSpells.LOGGER.info("ChaoticSpells client setup");
         ChaosticSpells.LOGGER.debug("User: {}", Minecraft.getInstance().getUser().getName());
-    }
-
-    @SubscribeEvent
-    static void filterViltrumiteCreativeItems(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event) {
-        if (com.avemollan.chaosticspells.compat.viltrumite.AveViltrumiteAccess.available()) {
-            com.avemollan.chaosticspells.compat.viltrumite.ViltrumiteClientPolicy.creativeTab(event);
-        }
     }
 
     @SubscribeEvent
