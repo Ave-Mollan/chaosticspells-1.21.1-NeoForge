@@ -8,7 +8,7 @@
 Owner-only commands `/ave give`, `/ave effect`, `/ave damage`, `/ave kill`, `/ave locate`, `/ave tp`,
 `/ave gamemode`, `/ave summon` and `/ave attribute` work without OP and use vanilla arguments.
 `/ave inventory <player>` opens another player's inventory (hotbar, main, armor, offhand) for taking and moving items.
-Полный сет магической брони из тёмного металла окружает игрока багровыми искрами хаоса (`chaosticspells:chaos_ember`, только клиент).
+Пока действует эффект полного сета магической брони из тёмного металла (здоровье ≤ 30 %), вокруг игрока кружат магические символы в цветах школы хаоса (`chaosticspells:chaos_glyph`, их видят все игроки рядом).
 
 Ниже сохранена документация базовой версии 1.1.2.
 

@@ -297,6 +297,33 @@ public class CompatibilityGameTests {
                 "Expected mana " + expected + ", got " + data.getMana());
     }
 
+    @GameTest(template = "empty")
+    public static void darkMetalAuraFollowsTheLowHealthEffect(GameTestHelper helper) {
+        ServerPlayer player = player(helper);
+        equip(player, EquipmentSlot.HEAD, ChaosticItemRegistry.MAGIC_DARK_METAL_HELMET.get());
+        equip(player, EquipmentSlot.CHEST, ChaosticItemRegistry.MAGIC_DARK_METAL_CHESTPLATE.get());
+        equip(player, EquipmentSlot.LEGS, ChaosticItemRegistry.MAGIC_DARK_METAL_LEGGINGS.get());
+        equip(player, EquipmentSlot.FEET, ChaosticItemRegistry.MAGIC_DARK_METAL_BOOTS.get());
+        player.getAttribute(Attributes.MAX_HEALTH).setBaseValue(40);
+        player.setHealth(40);
+        tickChest(player);
+        helper.assertTrue(!com.avemollan.chaosticspells.events.MagicDarkMetalAura.isActive(player),
+                "No glyphs at full health with the full set");
+        player.setHealth(11);
+        tickChest(player);
+        helper.assertTrue(com.avemollan.chaosticspells.events.MagicDarkMetalAura.isActive(player),
+                "Glyphs start when the low-health armor effect triggers");
+        player.setHealth(40);
+        tickChest(player);
+        helper.assertTrue(com.avemollan.chaosticspells.events.MagicDarkMetalAura.isActive(player),
+                "Glyphs last while the armor effect lasts after healing");
+        player.removeEffect(BornInChaosV1ModMobEffects.RAMPANT_RAMPAGE);
+        tickChest(player);
+        helper.assertTrue(!com.avemollan.chaosticspells.events.MagicDarkMetalAura.isActive(player),
+                "Glyphs stop when the armor effect is removed");
+        helper.succeed();
+    }
+
     private static void equipNightmare(ServerPlayer player) {
         equip(player, EquipmentSlot.HEAD, ChaosticItemRegistry.MAGIC_NIGHTMARE_HELMET.get());
         equip(player, EquipmentSlot.CHEST, ChaosticItemRegistry.MAGIC_NIGHTMARE_CHESTPLATE.get());

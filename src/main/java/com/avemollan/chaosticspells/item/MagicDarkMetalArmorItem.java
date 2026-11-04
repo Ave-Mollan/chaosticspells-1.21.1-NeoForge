@@ -26,6 +26,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+
+import com.avemollan.chaosticspells.events.MagicDarkMetalAura;
 import net.minecraft.world.level.Level;
 
 import net.neoforged.fml.ModList;
@@ -147,10 +149,16 @@ public abstract class MagicDarkMetalArmorItem extends ArmorItem {
                         .registryAccess()
                         .registryOrThrow(Registries.MOB_EFFECT)
                         .getHolder(RAMPANT_RAMPAGE_KEY)
-                        .ifPresent(rampHolder -> player.addEffect(new MobEffectInstance(rampHolder, 100, 0)));
+                        .ifPresentOrElse(rampHolder -> {
+                            player.addEffect(new MobEffectInstance(rampHolder, MagicDarkMetalAura.EFFECT_TICKS, 0));
+                            MagicDarkMetalAura.markTriggered(player, rampHolder);
+                        }, () -> MagicDarkMetalAura.markTriggered(player, MobEffects.HUNGER));
+            } else {
+                MagicDarkMetalAura.markTriggered(player, MobEffects.HUNGER);
             }
-            player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 100, 2, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.HUNGER, MagicDarkMetalAura.EFFECT_TICKS, 2, false, false));
         }
+        MagicDarkMetalAura.tick(player);
     }
 
     private static ResourceLocation armorTexturePath(Type type) {

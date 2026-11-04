@@ -143,6 +143,12 @@ public class ChaosticSpellsClient {
         event.registerLayerDefinition(BicDarkMetalLeggingsClientExtensions.LAYER_LOCATION, BicDarkMetalLeggingsClientExtensions::createBodyLayer);
     }
 
+    @SubscribeEvent
+    static void registerParticleProviders(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(com.avemollan.chaosticspells.registry.ChaosticParticleRegistry.CHAOS_GLYPH.get(),
+                com.avemollan.chaosticspells.client.ChaosGlyphParticle.Provider::new);
+    }
+
     /** Runs after every entity model reload; drops armor models baked from the previous resource packs. */
     @SubscribeEvent
     static void clearArmorModelCache(EntityRenderersEvent.AddLayers event) {
